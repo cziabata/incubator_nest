@@ -11,3 +11,9 @@ export class UpdatePostDto {
   content?: string;
   blogId?: string;
 }
+
+export class CreatePostForSpecificBlogDto {
+  title: string;
+  shortDescription: string;
+  content: string;
+}

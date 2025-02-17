@@ -20,11 +20,14 @@ import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { PostsQueryRepository } from '../../posts/infrastructure/query/post.query-repository';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
+import { CreatePostForSpecificBlogInputDto } from './input-dto/create-blog-post.input-dto';
+import { PostsService } from '../../posts/application/posts.service';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
     private readonly blogsService: BlogsService,
+    private readonly postsService: PostsService,
     private readonly blogsQueryRepository: BlogsQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
   ) {}
@@ -59,6 +62,19 @@ export class BlogsController {
   ): Promise<BlogViewDto> {
     const blogId = await this.blogsService.createBlog(createBlogInputDto);
     return this.blogsQueryRepository.getById(blogId);
+  }
+
+  @Post(':id/posts')
+  @ApiOperation({ summary: 'Create a post for specific blog' })
+  async createPostForSpecificBlog(
+    @Param('id') id: string,
+    @Body() createPostForSpecificInputDto: CreatePostForSpecificBlogInputDto,
+  ): Promise<PostViewDto> {
+    const postId = await this.postsService.createPostForSpecificBlog(
+      id,
+      createPostForSpecificInputDto,
+    );
+    return this.postsQueryRepository.getById(postId);
   }
 
   @Put(':id')
