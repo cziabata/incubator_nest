@@ -28,11 +28,9 @@ export class UsersController {
     console.log('UsersController created');
   }
 
-  @ApiParam({ name: 'id' }) //для сваггера
-  @Get(':id') //users/232342-sdfssdf-23234323
+  @ApiParam({ name: 'id' })
+  @Get(':id')
   async getById(@Param('id') id: string): Promise<UserViewDto> {
-    // можем и чаще так и делаем возвращать Promise из action. Сам NestJS будет дожидаться, когда
-    // промис зарезолвится и затем NestJS вернёт результат клиенту
     return this.usersQueryRepository.getByIdOrNotFoundFail(id);
   }
 
@@ -45,9 +43,8 @@ export class UsersController {
 
   @Post()
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
-    console.log('createUser', body);
     const userId = await this.usersService.createUser(body);
-
+    console.log('userId', userId);
     return this.usersQueryRepository.getByIdOrNotFoundFail(userId);
   }
 
@@ -61,7 +58,7 @@ export class UsersController {
     return this.usersQueryRepository.getByIdOrNotFoundFail(userId);
   }
 
-  @ApiParam({ name: 'id' }) //для сваггера
+  @ApiParam({ name: 'id' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string): Promise<void> {
