@@ -13,15 +13,15 @@ export class BlogsQueryRepository {
   ) {}
 
   async getById(id: string): Promise<BlogViewDto> {
-    const user = await this.BlogModel.findOne({
+    const blog = await this.BlogModel.findOne({
       _id: id,
     });
 
-    if (!user) {
-      throw new NotFoundException('user not found');
+    if (!blog) {
+      throw new NotFoundException('blog not found');
     }
 
-    return BlogViewDto.mapToView(user);
+    return BlogViewDto.mapToView(blog);
   }
 
   async getAll(
