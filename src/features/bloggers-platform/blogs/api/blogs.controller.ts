@@ -17,12 +17,16 @@ import { BlogViewDto } from './view-dto/blogs.view-dto';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
 import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
+import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
+import { PostsQueryRepository } from '../../posts/infrastructure/query/post.query-repository';
+import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
     private readonly blogsService: BlogsService,
     private readonly blogsQueryRepository: BlogsQueryRepository,
+    private readonly postsQueryRepository: PostsQueryRepository,
   ) {}
 
   @Get()
@@ -37,6 +41,15 @@ export class BlogsController {
   @ApiOperation({ summary: 'Return blog by ID' })
   async getBlogByID(@Param('id') id: string): Promise<BlogViewDto> {
     return this.blogsQueryRepository.getById(id);
+  }
+
+  @Get(':id/posts')
+  @ApiOperation({ summary: 'Return posts by blog ID' })
+  async getBlogPosts(
+    @Param('id') id: string,
+    @Query() query: GetPostsQueryParams,
+  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    return this.postsQueryRepository.getPostsByBlogId(id, query);
   }
 
   @Post()
