@@ -1,6 +1,9 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { ExtendedLikesInfo } from './extended-likes.schema';
+import {
+  ExtendedLikesInfo,
+  ExtendedLikesInfoSchema,
+} from './extended-likes.schema';
 import { CreatePostDomainDto } from './dto/create-post.domain.dto';
 import { UpdatePostDto } from '../dto/posts.dto';
 
@@ -25,7 +28,7 @@ export class Post {
   @Prop({ type: String, required: true })
   blogName: string;
 
-  @Prop({ type: ExtendedLikesInfo, required: true, default: {} })
+  @Prop({ type: ExtendedLikesInfoSchema, required: true, default: {} })
   extendedLikesInfo: ExtendedLikesInfo;
 
   get id() {

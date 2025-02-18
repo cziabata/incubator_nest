@@ -26,4 +26,5 @@ export class ExtendedLikesInfo {
   newestLikes: NewestLike[];
 }
 
-export const NameSchema = SchemaFactory.createForClass(ExtendedLikesInfo);
+export const ExtendedLikesInfoSchema =
+  SchemaFactory.createForClass(ExtendedLikesInfo);
