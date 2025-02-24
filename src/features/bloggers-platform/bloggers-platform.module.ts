@@ -34,5 +34,11 @@ import { CommentsQueryRepository } from './comments/infrastructure/query/comment
     PostsQueryRepository,
     CommentsQueryRepository,
   ],
+  exports: [
+    BlogsRepository,
+    PostsRepository,
+    CommentsQueryRepository,
+    MongooseModule,
+  ],
 })
 export class BloggersPlatformModule {}

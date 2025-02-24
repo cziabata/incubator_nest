@@ -52,7 +52,7 @@ export class BlogsController {
     @Param('id') id: string,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return this.postsQueryRepository.getPostsByBlogId(id, query);
+    return this.blogsService.getPostsByBlogId(id, query);
   }
 
   @Post()
