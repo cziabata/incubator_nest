@@ -9,6 +9,9 @@ import { AuthController } from './api/auth.controller';
 import { SecurityDevicesQueryRepository } from './infrastructure/query/security-devices.query-repository';
 import { AuthQueryRepository } from './infrastructure/query/auth.query-repository';
 import { SecurityDevicesController } from './api/security-devices.controller';
+import { CryptoService } from './application/crypto.service';
+import { AuthService } from './application/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { SecurityDevicesController } from './api/security-devices.controller';
   controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
     UsersService,
+    CryptoService,
+    AuthService,
+    JwtService,
     UsersRepository,
     UsersQueryRepository,
     SecurityDevicesQueryRepository,

@@ -24,9 +24,7 @@ export class UsersController {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
-  ) {
-    console.log('UsersController created');
-  }
+  ) {}
 
   @ApiParam({ name: 'id' })
   @Get(':id')
@@ -44,7 +42,6 @@ export class UsersController {
   @Post()
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
     const userId = await this.usersService.createUser(body);
-    console.log('userId', userId);
     return this.usersQueryRepository.getByIdOrNotFoundFail(userId);
   }
 

@@ -27,6 +27,12 @@ export class User {
   @Prop({ type: Boolean, required: true, default: false })
   isEmailConfirmed: boolean;
 
+  @Prop({ type: String, nullable: true, default: null })
+  confirmationCode: string | null;
+
+  @Prop({ type: Date, nullable: true, default: null })
+  expirationDate: Date | null;
+
   @Prop({ type: NameSchema })
   name: Name;
 

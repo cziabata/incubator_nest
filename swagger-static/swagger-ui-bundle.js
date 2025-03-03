@@ -1,1 +1,1 @@
-{"message":"Cannot GET /swagger/swagger-ui-bundle.js","error":"Not Found","statusCode":404}
+{"timestamp":"2025-03-03T17:10:08.557Z","path":"/swagger/swagger-ui-bundle.js","message":"Cannot GET /swagger/swagger-ui-bundle.js","code":null,"extensions":[]}
