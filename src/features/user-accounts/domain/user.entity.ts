@@ -49,6 +49,8 @@ export class User {
     user.passwordHash = dto.passwordHash;
     user.login = dto.login;
     user.isEmailConfirmed = false;
+    user.expirationDate = dto.expirationDate ?? null;
+    user.confirmationCode = dto.confirmationCode ?? null;
     user.deletedAt = null;
 
     user.name = {

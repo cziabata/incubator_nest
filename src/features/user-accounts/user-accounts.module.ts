@@ -12,10 +12,12 @@ import { SecurityDevicesController } from './api/security-devices.controller';
 import { CryptoService } from './application/crypto.service';
 import { AuthService } from './application/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { EmailModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    EmailModule,
   ],
   controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [

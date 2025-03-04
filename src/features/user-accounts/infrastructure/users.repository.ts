@@ -5,7 +5,6 @@ import { NotFoundDomainException } from '../../../core/exceptions/domain-excepti
 
 @Injectable()
 export class UsersRepository {
-  //инжектирование модели через DI
   constructor(@InjectModel(User.name) private UserModel: UserModelType) {}
 
   async findById(id: string): Promise<UserDocument | null> {
@@ -34,6 +33,10 @@ export class UsersRepository {
   }
 
   async loginIsExist(login: string): Promise<boolean> {
-    return !!(await this.UserModel.countDocuments({ login: login }));
+    return !!(await this.UserModel.countDocuments({ login }));
+  }
+
+  async emailIsExist(email: string): Promise<boolean> {
+    return !!(await this.UserModel.countDocuments({ email }));
   }
 }
