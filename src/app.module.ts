@@ -9,6 +9,8 @@ import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-pl
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { GLOBAL_PREFIX } from './setup/global-prefix.setup';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -21,11 +23,25 @@ import { GLOBAL_PREFIX } from './setup/global-prefix.setup';
       serveRoot:
         process.env.NODE_ENV === 'development' ? '/' : `/${GLOBAL_PREFIX}`,
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000, // Окно в 10 секунд
+          limit: 5, // Максимум 5 запросов за это время
+        },
+      ],
+    }),
     TestingModule,
     CoreModule,
     BloggersPlatformModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -48,15 +48,29 @@ export class AuthService {
   }
 
   async createUser(dto: CreateUserDto): Promise<void> {
+    // if (await this.usersRepository.emailIsExist(dto.email)) {
+    //   throw BadRequestDomainException.create(
+    //     `Email ${dto.email} is already taken`,
+    //   );
+    // }
+
+    // if (await this.usersRepository.loginIsExist(dto.login)) {
+    //   throw BadRequestDomainException.create(
+    //     `Login ${dto.login} is already taken`,
+    //   );
+    // }
+
     if (await this.usersRepository.emailIsExist(dto.email)) {
       throw BadRequestDomainException.create(
         `Email ${dto.email} is already taken`,
+        'email', // указание поля, которое вызвало ошибку
       );
     }
 
     if (await this.usersRepository.loginIsExist(dto.login)) {
       throw BadRequestDomainException.create(
         `Login ${dto.login} is already taken`,
+        'login', // указание поля, которое вызвало ошибку
       );
     }
 
