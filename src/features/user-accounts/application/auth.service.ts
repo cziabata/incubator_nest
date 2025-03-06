@@ -9,7 +9,7 @@ import { BadRequestDomainException } from 'src/core/exceptions/domain-exceptions
 import { EmailService } from 'src/features/notifications/email.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
-import { add } from 'date-fns';
+import { add, isAfter } from 'date-fns';
 
 @Injectable()
 export class AuthService {
@@ -89,6 +89,89 @@ export class AuthService {
     });
 
     await this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
+
+    await this.usersRepository.save(user);
+  }
+
+  async resendConfirmationCode(email: string) {
+    const user = await this.usersRepository.findByEmail(email);
+    if (!user) {
+      throw BadRequestDomainException.create('User not found', 'user');
+    }
+
+    if (user.isEmailConfirmed) {
+      throw BadRequestDomainException.create('Email already confirmed');
+    }
+
+    const confirmationCode = uuidv4();
+
+    user.confirmationCode = confirmationCode;
+    user.expirationDate = add(new Date(), { hours: 1, minutes: 15 });
+
+    await this.emailService.sendConfirmationEmail(email, confirmationCode);
+
+    await this.usersRepository.save(user);
+  }
+
+  async confirmRegistration(code: string) {
+    const user = await this.usersRepository.findByConfirmationCode(code);
+    if (!user) {
+      throw BadRequestDomainException.create('User not found', 'user');
+    }
+    if (user.isEmailConfirmed) {
+      throw BadRequestDomainException.create('Email already confirmed');
+    }
+    if (
+      !user.expirationDate ||
+      !isAfter(user.expirationDate, new Date(Date.now()))
+    ) {
+      throw BadRequestDomainException.create('Confirmation code expired');
+    }
+    if (user.confirmationCode !== code) {
+      throw BadRequestDomainException.create('Invalid confirmation code');
+    }
+    user.isEmailConfirmed = true;
+    await this.usersRepository.save(user);
+  }
+
+  async passwordRecovery(email: string) {
+    const user = await this.usersRepository.findByEmail(email);
+    if (!user) {
+      throw BadRequestDomainException.create('User not found', 'user');
+    }
+
+    const recoveryCode = uuidv4();
+
+    user.confirmationCode = recoveryCode;
+    user.expirationDate = add(new Date(), { hours: 1, minutes: 15 });
+    user.isEmailConfirmed = false;
+
+    await this.emailService.sendPasswordRecoveryEmail(email, recoveryCode);
+
+    await this.usersRepository.save(user);
+  }
+
+  async confirmPasswordRecovery(newPassword: string, code: string) {
+    const user = await this.usersRepository.findByConfirmationCode(code);
+    if (!user) {
+      throw BadRequestDomainException.create('User not found', 'user');
+    }
+    if (user.isEmailConfirmed) {
+      throw BadRequestDomainException.create('Email already confirmed');
+    }
+    if (
+      !user.expirationDate ||
+      !isAfter(user.expirationDate, new Date(Date.now()))
+    ) {
+      throw BadRequestDomainException.create('Confirmation code expired');
+    }
+    if (user.confirmationCode !== code) {
+      throw BadRequestDomainException.create('Invalid confirmation code');
+    }
+
+    user.passwordHash =
+      await this.cryptoService.createPasswordHash(newPassword);
+    user.isEmailConfirmed = true;
 
     await this.usersRepository.save(user);
   }
