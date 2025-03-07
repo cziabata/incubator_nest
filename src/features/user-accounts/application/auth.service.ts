@@ -5,7 +5,10 @@ import { UserContextDto } from '../guards/dto/user-context.dto';
 import { CryptoService } from './crypto.service';
 import { User, UserModelType } from '../domain/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { BadRequestDomainException } from 'src/core/exceptions/domain-exceptions';
+import {
+  BadRequestDomainException,
+  UnauthorizedDomainException,
+} from 'src/core/exceptions/domain-exceptions';
 import { EmailService } from 'src/features/notifications/email.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,10 +44,36 @@ export class AuthService {
   }
 
   async login(userId: string) {
-    const accessToken = this.jwtService.sign({ id: userId } as UserContextDto);
+    const accessToken = this.jwtService.sign({ id: userId } as UserContextDto, {
+      secret: process.env.AC_SECRET || 'your_secret_key',
+      expiresIn: '5m',
+    });
     return {
       accessToken,
     };
+  }
+
+  async validateAndLogin(
+    loginOrEmail: string,
+    password: string,
+  ): Promise<{ accessToken: string }> {
+    const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
+    if (!user) {
+      throw UnauthorizedDomainException.create(
+        'Invalid login or password or email',
+      );
+    }
+    const isPasswordValid = await this.cryptoService.comparePasswords({
+      password,
+      hash: user.passwordHash,
+    });
+    if (!isPasswordValid) {
+      throw UnauthorizedDomainException.create(
+        'Invalid login or password or email',
+      );
+    }
+
+    return await this.login(user.id);
   }
 
   async createUser(dto: CreateUserDto): Promise<void> {

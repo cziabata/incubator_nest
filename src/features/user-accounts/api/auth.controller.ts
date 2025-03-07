@@ -6,6 +6,7 @@ import { ResendRegistrationEmailInputDto } from './input-dto/resend-registration
 import { ConfirmRegistrationInputDto } from './input-dto/confirm-registration.input-dto';
 import { PasswordRecoveryInputDto } from './input-dto/password-recovery.input-dto';
 import { ConfirmPasswordRecoveryInputDto } from './input-dto/confirm-password-recovery.input-dto';
+import { LoginInputDto } from './input-dto/login.input-dto';
 
 @Controller('auth')
 export class AuthController {
@@ -52,5 +53,17 @@ export class AuthController {
     @Body() body: ConfirmPasswordRecoveryInputDto,
   ): Promise<void> {
     await this.authService.confirmPasswordRecovery(body.password, body.code);
+  }
+
+  @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @HttpCode(200)
+  async login(@Body() body: LoginInputDto) {
+    const { accessToken } = await this.authService.validateAndLogin(
+      body.loginOrEmail,
+      body.password,
+    );
+
+    return { accessToken };
   }
 }
