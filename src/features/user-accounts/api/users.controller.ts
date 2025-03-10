@@ -9,15 +9,17 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
 import { UserViewDto } from './view-dto/users.view-dto';
 import { UsersService } from '../application/users.service';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
-import { ApiParam } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiParam } from '@nestjs/swagger';
 import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
+import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -32,6 +34,8 @@ export class UsersController {
     return this.usersQueryRepository.getByIdOrNotFoundFail(id);
   }
 
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(
     @Query() query: GetUsersQueryParams,
@@ -39,6 +43,8 @@ export class UsersController {
     return this.usersQueryRepository.getAll(query);
   }
 
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Post()
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
     const userId = await this.usersService.createUser(body);
@@ -55,6 +61,8 @@ export class UsersController {
     return this.usersQueryRepository.getByIdOrNotFoundFail(userId);
   }
 
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @ApiParam({ name: 'id' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
