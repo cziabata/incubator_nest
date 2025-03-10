@@ -21,8 +21,8 @@ import { JwtStrategy } from './guards/bearer/jwt.strategy';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     EmailModule,
     JwtModule.register({
-      secret: 'access-token-secret', //TODO: move to env. will be in the following lessons
-      signOptions: { expiresIn: '60m' }, // Время жизни токена
+      secret: 'access-token-secret',
+      signOptions: { expiresIn: '60m' },
     }),
   ],
   controllers: [UsersController, AuthController, SecurityDevicesController],
