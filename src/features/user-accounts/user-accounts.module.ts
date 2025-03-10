@@ -36,7 +36,6 @@ import { JwtStrategy } from './guards/bearer/jwt.strategy';
     SecurityDevicesQueryRepository,
     AuthQueryRepository,
     LocalStrategy,
-    CryptoService,
     JwtStrategy,
   ],
   exports: [UsersRepository, MongooseModule, JwtStrategy],
