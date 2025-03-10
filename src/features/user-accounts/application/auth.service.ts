@@ -45,8 +45,8 @@ export class AuthService {
 
   async login(userId: string) {
     const accessToken = this.jwtService.sign({ id: userId } as UserContextDto, {
-      secret: process.env.AC_SECRET || 'your_secret_key',
-      expiresIn: '5m',
+      secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
+      expiresIn: '60m',
     });
     return {
       accessToken,

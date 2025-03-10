@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { AuthService } from '../application/auth.service';
 import { Throttle } from '@nestjs/throttler';
@@ -7,10 +14,19 @@ import { ConfirmRegistrationInputDto } from './input-dto/confirm-registration.in
 import { PasswordRecoveryInputDto } from './input-dto/password-recovery.input-dto';
 import { ConfirmPasswordRecoveryInputDto } from './input-dto/confirm-password-recovery.input-dto';
 import { LoginInputDto } from './input-dto/login.input-dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../guards/bearer/jwt-auth.guard';
+import { ExtractUserFromRequest } from '../guards/decorators/param/extract-user-from-request.decorator';
+import { UserContextDto } from '../guards/dto/user-context.dto';
+import { MeViewDto } from './view-dto/users.view-dto';
+import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private authQueryRepository: AuthQueryRepository,
+  ) {}
 
   @Post('registration')
   @Throttle({ default: { limit: 5, ttl: 10000 } })
@@ -65,5 +81,12 @@ export class AuthController {
     );
 
     return { accessToken };
+  }
+
+  @ApiBearerAuth()
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  me(@ExtractUserFromRequest() user: UserContextDto): Promise<MeViewDto> {
+    return this.authQueryRepository.me(user.id);
   }
 }

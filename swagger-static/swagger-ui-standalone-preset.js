@@ -1,1 +1,1 @@
-{"timestamp":"2025-03-10T17:11:23.116Z","path":"/swagger/swagger-ui-standalone-preset.js","message":"Cannot GET /swagger/swagger-ui-standalone-preset.js","code":null,"extensions":[]}
+{"timestamp":"2025-03-10T18:12:39.714Z","path":"/swagger/swagger-ui-standalone-preset.js","message":"Cannot GET /swagger/swagger-ui-standalone-preset.js","code":null,"extensions":[]}

@@ -11,13 +11,19 @@ import { AuthQueryRepository } from './infrastructure/query/auth.query-repositor
 import { SecurityDevicesController } from './api/security-devices.controller';
 import { CryptoService } from './application/crypto.service';
 import { AuthService } from './application/auth.service';
-import { JwtService } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { EmailModule } from '../notifications/notifications.module';
+import { LocalStrategy } from './guards/local/local.strategy';
+import { JwtStrategy } from './guards/bearer/jwt.strategy';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     EmailModule,
+    JwtModule.register({
+      secret: 'access-token-secret', //TODO: move to env. will be in the following lessons
+      signOptions: { expiresIn: '60m' }, // Время жизни токена
+    }),
   ],
   controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
@@ -29,7 +35,10 @@ import { EmailModule } from '../notifications/notifications.module';
     UsersQueryRepository,
     SecurityDevicesQueryRepository,
     AuthQueryRepository,
+    LocalStrategy,
+    CryptoService,
+    JwtStrategy,
   ],
-  exports: [UsersRepository, MongooseModule],
+  exports: [UsersRepository, MongooseModule, JwtStrategy],
 })
 export class UserAccountsModule {}
