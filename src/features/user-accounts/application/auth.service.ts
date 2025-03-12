@@ -11,8 +11,6 @@ import {
 } from 'src/core/exceptions/domain-exceptions';
 import { EmailService } from 'src/features/notifications/email.service';
 import { InjectModel } from '@nestjs/mongoose';
-import { v4 as uuidv4 } from 'uuid';
-import { add, isAfter } from 'date-fns';
 
 @Injectable()
 export class AuthService {
@@ -48,9 +46,7 @@ export class AuthService {
       secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
       expiresIn: '60m',
     });
-    return {
-      accessToken,
-    };
+    return { accessToken };
   }
 
   async validateAndLogin(
@@ -72,7 +68,6 @@ export class AuthService {
         'Invalid login or password or email',
       );
     }
-
     return await this.login(user.id);
   }
 
@@ -95,30 +90,28 @@ export class AuthService {
         'email', // указание поля, которое вызвало ошибку
       );
     }
-
     if (await this.usersRepository.loginIsExist(dto.login)) {
       throw BadRequestDomainException.create(
         `Login ${dto.login} is already taken`,
-        'login', // указание поля, которое вызвало ошибку
+        'login',
       );
     }
 
     const passwordHash = await this.cryptoService.createPasswordHash(
       dto.password,
     );
-
-    const confirmationCode = uuidv4();
+    const confirmationCode = crypto.randomUUID();
+    const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
     const user = this.UserModel.createInstance({
       email: dto.email,
       login: dto.login,
       passwordHash: passwordHash,
       confirmationCode,
-      expirationDate: add(new Date(), { hours: 1, minutes: 15 }),
+      expirationDate,
     });
 
     await this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
-
     await this.usersRepository.save(user);
   }
 
@@ -127,18 +120,14 @@ export class AuthService {
     if (!user) {
       throw BadRequestDomainException.create('User not found', 'user');
     }
-
     if (user.isEmailConfirmed) {
       throw BadRequestDomainException.create('Email already confirmed');
     }
 
-    const confirmationCode = uuidv4();
+    user.confirmationCode = crypto.randomUUID();
+    user.expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
-    user.confirmationCode = confirmationCode;
-    user.expirationDate = add(new Date(), { hours: 1, minutes: 15 });
-
-    await this.emailService.sendConfirmationEmail(email, confirmationCode);
-
+    await this.emailService.sendConfirmationEmail(email, user.confirmationCode);
     await this.usersRepository.save(user);
   }
 
@@ -150,10 +139,7 @@ export class AuthService {
     if (user.isEmailConfirmed) {
       throw BadRequestDomainException.create('Email already confirmed');
     }
-    if (
-      !user.expirationDate ||
-      !isAfter(user.expirationDate, new Date(Date.now()))
-    ) {
+    if (!user.expirationDate || new Date() > user.expirationDate) {
       throw BadRequestDomainException.create('Confirmation code expired');
     }
     if (user.confirmationCode !== code) {
@@ -168,15 +154,14 @@ export class AuthService {
     if (!user) {
       throw BadRequestDomainException.create('User not found', 'user');
     }
-
-    const recoveryCode = uuidv4();
-
-    user.confirmationCode = recoveryCode;
-    user.expirationDate = add(new Date(), { hours: 1, minutes: 15 });
+    user.confirmationCode = crypto.randomUUID();
+    user.expirationDate = new Date(Date.now() + 75 * 60 * 1000);
     user.isEmailConfirmed = false;
 
-    await this.emailService.sendPasswordRecoveryEmail(email, recoveryCode);
-
+    await this.emailService.sendPasswordRecoveryEmail(
+      email,
+      user.confirmationCode,
+    );
     await this.usersRepository.save(user);
   }
 
@@ -188,10 +173,7 @@ export class AuthService {
     if (user.isEmailConfirmed) {
       throw BadRequestDomainException.create('Email already confirmed');
     }
-    if (
-      !user.expirationDate ||
-      !isAfter(user.expirationDate, new Date(Date.now()))
-    ) {
+    if (!user.expirationDate || new Date() > user.expirationDate) {
       throw BadRequestDomainException.create('Confirmation code expired');
     }
     if (user.confirmationCode !== code) {
@@ -201,7 +183,6 @@ export class AuthService {
     user.passwordHash =
       await this.cryptoService.createPasswordHash(newPassword);
     user.isEmailConfirmed = true;
-
     await this.usersRepository.save(user);
   }
 }
