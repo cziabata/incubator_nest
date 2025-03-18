@@ -26,8 +26,8 @@ import { APP_GUARD } from '@nestjs/core';
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: 10000, // Окно в 10 секунд
-          limit: 5, // Максимум 5 запросов за это время
+          ttl: 60000, // Окно в 1 минуту
+          limit: 100, // Максимум 100 запросов за это время
         },
       ],
     }),
