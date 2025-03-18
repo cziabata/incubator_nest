@@ -118,10 +118,10 @@ export class AuthService {
   async resendConfirmationCode(email: string) {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) {
-      throw BadRequestDomainException.create('User not found', 'user');
+      throw BadRequestDomainException.create('Email does not exist', 'email');
     }
     if (user.isEmailConfirmed) {
-      throw BadRequestDomainException.create('Email already confirmed');
+      throw BadRequestDomainException.create('Email already confirmed', 'email');
     }
 
     user.confirmationCode = crypto.randomUUID();
@@ -134,16 +134,16 @@ export class AuthService {
   async confirmRegistration(code: string) {
     const user = await this.usersRepository.findByConfirmationCode(code);
     if (!user) {
-      throw BadRequestDomainException.create('User not found', 'user');
+      throw BadRequestDomainException.create('Code does not exist', 'code');
     }
     if (user.isEmailConfirmed) {
-      throw BadRequestDomainException.create('Email already confirmed');
+      throw BadRequestDomainException.create('Email already confirmed', 'code');
     }
     if (!user.expirationDate || new Date() > user.expirationDate) {
-      throw BadRequestDomainException.create('Confirmation code expired');
+      throw BadRequestDomainException.create('Confirmation code expired', 'code');
     }
     if (user.confirmationCode !== code) {
-      throw BadRequestDomainException.create('Invalid confirmation code');
+      throw BadRequestDomainException.create('Invalid confirmation code', 'code');
     }
     user.isEmailConfirmed = true;
     await this.usersRepository.save(user);
@@ -152,7 +152,7 @@ export class AuthService {
   async passwordRecovery(email: string) {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) {
-      throw BadRequestDomainException.create('User not found', 'user');
+      throw BadRequestDomainException.create('Email does not exist', 'email');
     }
     user.confirmationCode = crypto.randomUUID();
     user.expirationDate = new Date(Date.now() + 75 * 60 * 1000);
@@ -168,16 +168,16 @@ export class AuthService {
   async confirmPasswordRecovery(newPassword: string, code: string) {
     const user = await this.usersRepository.findByConfirmationCode(code);
     if (!user) {
-      throw BadRequestDomainException.create('User not found', 'user');
+      throw BadRequestDomainException.create('Code does not exist', 'code');
     }
     if (user.isEmailConfirmed) {
-      throw BadRequestDomainException.create('Email already confirmed');
+      throw BadRequestDomainException.create('Email already confirmed', 'code');
     }
     if (!user.expirationDate || new Date() > user.expirationDate) {
-      throw BadRequestDomainException.create('Confirmation code expired');
+      throw BadRequestDomainException.create('Confirmation code expired', 'code');
     }
     if (user.confirmationCode !== code) {
-      throw BadRequestDomainException.create('Invalid confirmation code');
+      throw BadRequestDomainException.create('Invalid confirmation code', 'code');
     }
 
     user.passwordHash =
