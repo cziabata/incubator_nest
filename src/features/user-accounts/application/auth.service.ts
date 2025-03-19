@@ -124,10 +124,13 @@ export class AuthService {
       throw BadRequestDomainException.create('Email already confirmed', 'email');
     }
 
-    user.confirmationCode = crypto.randomUUID();
-    user.expirationDate = new Date(Date.now() + 75 * 60 * 1000);
+    const confirmationCode = crypto.randomUUID();
+    const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
-    await this.emailService.sendConfirmationEmail(email, user.confirmationCode);
+    user.confirmationCode = confirmationCode;
+    user.expirationDate = expirationDate;
+
+    await this.emailService.sendConfirmationEmail(email, confirmationCode);
     await this.usersRepository.save(user);
   }
 
