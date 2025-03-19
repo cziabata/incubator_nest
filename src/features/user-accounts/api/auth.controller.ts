@@ -32,6 +32,8 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async createUser(@Body() body: CreateUserInputDto): Promise<void> {
+    console.log('registration', body.login, body.password);
+    console.log('registration', body.email);
     await this.authService.createUser(body);
   }
 
@@ -41,6 +43,7 @@ export class AuthController {
   async resendConfirmationCode(
     @Body() body: ResendRegistrationEmailInputDto,
   ): Promise<void> {
+    console.log('registration-email-resending', body.email);
     await this.authService.resendConfirmationCode(body.email);
   }
 
@@ -50,6 +53,7 @@ export class AuthController {
   async confirmRegistration(
     @Body() body: ConfirmRegistrationInputDto,
   ): Promise<void> {
+    console.log('registration-confirmation', body.code);
     await this.authService.confirmRegistration(body.code);
   }
 
@@ -75,6 +79,8 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(200)
   async login(@Body() body: LoginInputDto) {
+    console.log('login', body.loginOrEmail);
+    console.log('login', body.password);
     const { accessToken } = await this.authService.validateAndLogin(
       body.loginOrEmail,
       body.password,
