@@ -11,6 +11,7 @@ import { join } from 'path';
 import { GLOBAL_PREFIX } from './setup/global-prefix.setup';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { APP_GUARD } from '@nestjs/core';
         },
       ],
     }),
+    CqrsModule.forRoot(),
     TestingModule,
     CoreModule,
     BloggersPlatformModule,

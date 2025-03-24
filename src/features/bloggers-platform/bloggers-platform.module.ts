@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
-import { BlogsService } from './blogs/application/blogs.service';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -14,10 +13,23 @@ import { PostsQueryRepository } from './posts/infrastructure/query/post.query-re
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
 import { CommentsController } from './comments/api/comments.controller';
 import { CommentsQueryRepository } from './comments/infrastructure/query/comment.query-repository';
+import { CqrsModule } from '@nestjs/cqrs';
+import { CreateBlogUseCase } from './blogs/application/usecases/create-blog.usecase';
+import { UpdateBlogUseCase } from './blogs/application/usecases/update-blog.usecase';
+import { DeleteBlogUseCase } from './blogs/application/usecases/delete-blog.usecase';
+import { GetBlogPostsUseCase } from './blogs/application/usecases/get-blog-posts.usecase';
+
+const blogUseCases = [
+  CreateBlogUseCase,
+  UpdateBlogUseCase,
+  DeleteBlogUseCase,
+  GetBlogPostsUseCase
+];
 
 @Module({
   imports: [
     UserAccountsModule,
+    CqrsModule,
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
@@ -26,7 +38,7 @@ import { CommentsQueryRepository } from './comments/infrastructure/query/comment
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
-    BlogsService,
+    ...blogUseCases,
     BlogsRepository,
     BlogsQueryRepository,
     PostsService,

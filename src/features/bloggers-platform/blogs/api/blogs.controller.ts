@@ -9,7 +9,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { BlogsService } from '../application/blogs.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
@@ -22,11 +21,17 @@ import { PostsQueryRepository } from '../../posts/infrastructure/query/post.quer
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { CreatePostForSpecificBlogInputDto } from './input-dto/create-blog-post.input-dto';
 import { PostsService } from '../../posts/application/posts.service';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CreateBlogUsecaseCommand } from '../application/usecases/create-blog.usecase';
+import { UpdateBlogCommand } from '../application/usecases/update-blog.usecase';
+import { DeleteBlogCommand } from '../application/usecases/delete-blog.usecase';
+import { GetBlogPostsQuery } from '../application/usecases/get-blog-posts.usecase';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
-    private readonly blogsService: BlogsService,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     private readonly postsService: PostsService,
     private readonly blogsQueryRepository: BlogsQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
@@ -52,7 +57,7 @@ export class BlogsController {
     @Param('id') id: string,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return this.blogsService.getPostsByBlogId(id, query);
+    return this.queryBus.execute(new GetBlogPostsQuery(id, query));
   }
 
   @Post()
@@ -60,7 +65,9 @@ export class BlogsController {
   async createBlog(
     @Body() createBlogInputDto: CreateBlogInputDto,
   ): Promise<BlogViewDto> {
-    const blogId = await this.blogsService.createBlog(createBlogInputDto);
+    const blogId = await this.commandBus.execute(
+      new CreateBlogUsecaseCommand(createBlogInputDto),
+    );
     return this.blogsQueryRepository.getById(blogId);
   }
 
@@ -79,17 +86,16 @@ export class BlogsController {
 
   @Put(':id')
   @HttpCode(204)
-  async updateUser(
+  async updateBlog(
     @Param('id') id: string,
-    @Body() body: UpdateBlogInputDto,
+    @Body() updateBlogInputDto: UpdateBlogInputDto,
   ): Promise<void> {
-    await this.blogsService.updateBlog(id, body);
-    return;
+    await this.commandBus.execute(new UpdateBlogCommand(id, updateBlogInputDto));
   }
 
   @Delete(':id')
   @HttpCode(204)
   async deleteBlog(@Param('id') id: string): Promise<void> {
-    await this.blogsService.deleteBlog(id);
+    await this.commandBus.execute(new DeleteBlogCommand(id));
   }
 }
