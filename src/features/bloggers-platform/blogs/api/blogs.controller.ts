@@ -20,19 +20,18 @@ import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { PostsQueryRepository } from '../../posts/infrastructure/query/post.query-repository';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { CreatePostForSpecificBlogInputDto } from './input-dto/create-blog-post.input-dto';
-import { PostsService } from '../../posts/application/posts.service';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateBlogUsecaseCommand } from '../application/usecases/create-blog.usecase';
 import { UpdateBlogCommand } from '../application/usecases/update-blog.usecase';
 import { DeleteBlogCommand } from '../application/usecases/delete-blog.usecase';
 import { GetBlogPostsQuery } from '../application/usecases/get-blog-posts.usecase';
+import { CreatePostForSpecificBlogCommand } from '../../posts/application/usecases/create-post-for-specific-blog.usecase';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly postsService: PostsService,
     private readonly blogsQueryRepository: BlogsQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
   ) {}
@@ -77,9 +76,8 @@ export class BlogsController {
     @Param('id') id: string,
     @Body() createPostForSpecificInputDto: CreatePostForSpecificBlogInputDto,
   ): Promise<PostViewDto> {
-    const postId = await this.postsService.createPostForSpecificBlog(
-      id,
-      createPostForSpecificInputDto,
+    const postId = await this.commandBus.execute(
+      new CreatePostForSpecificBlogCommand(id, createPostForSpecificInputDto),
     );
     return this.postsQueryRepository.getById(postId);
   }

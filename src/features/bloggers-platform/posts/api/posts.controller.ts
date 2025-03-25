@@ -9,22 +9,25 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { PostsService } from '../application/posts.service';
 import { ApiOperation } from '@nestjs/swagger';
-import { CreatePostInputDto } from './input-dto/create-post.input-dto';
 import { PostsQueryRepository } from '../infrastructure/query/post.query-repository';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { CreatePostInputDto } from './input-dto/create-post.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
-import { GetCommentsQueryParams } from '../../comments/api/input-dto/get-comments-query-params.input-dto';
-import { CommentViewDto } from '../../comments/api/view-dto/comments.view-dto';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreatePostCommand } from '../application/usecases/create-post.usecase';
+import { UpdatePostCommand } from '../application/usecases/update-post.usecase';
+import { DeletePostCommand } from '../application/usecases/delete-post.usecase';
 import { CommentsQueryRepository } from '../../comments/infrastructure/query/comment.query-repository';
+import { CommentViewDto } from '../../comments/api/view-dto/comments.view-dto';
+import { GetCommentsQueryParams } from '../../comments/api/input-dto/get-comments-query-params.input-dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(
-    private readonly postsService: PostsService,
+    private readonly commandBus: CommandBus,
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly commentsQueryRepository: CommentsQueryRepository,
   ) {}
@@ -57,7 +60,9 @@ export class PostsController {
   async createPost(
     @Body() createPostInputDto: CreatePostInputDto,
   ): Promise<PostViewDto> {
-    const postId = await this.postsService.createPost(createPostInputDto);
+    const postId = await this.commandBus.execute(
+      new CreatePostCommand(createPostInputDto),
+    );
     return this.postsQueryRepository.getById(postId);
   }
 
@@ -65,15 +70,14 @@ export class PostsController {
   @HttpCode(204)
   async updatePost(
     @Param('id') id: string,
-    @Body() body: UpdatePostInputDto,
+    @Body() updatePostInputDto: UpdatePostInputDto,
   ): Promise<void> {
-    await this.postsService.updatePost(id, body);
-    return;
+    await this.commandBus.execute(new UpdatePostCommand(id, updatePostInputDto));
   }
 
   @Delete(':id')
   @HttpCode(204)
   async deletePost(@Param('id') id: string): Promise<void> {
-    await this.postsService.deletePost(id);
+    await this.commandBus.execute(new DeletePostCommand(id));
   }
 }

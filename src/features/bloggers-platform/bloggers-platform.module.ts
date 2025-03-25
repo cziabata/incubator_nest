@@ -7,7 +7,6 @@ import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsQueryRepository } from './blogs/infrastructure/query/blogs.query-repository';
 import { Post, PostSchema } from './posts/domain/post.entity';
 import { PostsController } from './posts/api/posts.controller';
-import { PostsService } from './posts/application/posts.service';
 import { PostsRepository } from './posts/infrastructure/posts.repository';
 import { PostsQueryRepository } from './posts/infrastructure/query/post.query-repository';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
@@ -18,12 +17,23 @@ import { CreateBlogUseCase } from './blogs/application/usecases/create-blog.usec
 import { UpdateBlogUseCase } from './blogs/application/usecases/update-blog.usecase';
 import { DeleteBlogUseCase } from './blogs/application/usecases/delete-blog.usecase';
 import { GetBlogPostsUseCase } from './blogs/application/usecases/get-blog-posts.usecase';
+import { CreatePostUseCase } from './posts/application/usecases/create-post.usecase';
+import { CreatePostForSpecificBlogUseCase } from './posts/application/usecases/create-post-for-specific-blog.usecase';
+import { UpdatePostUseCase } from './posts/application/usecases/update-post.usecase';
+import { DeletePostUseCase } from './posts/application/usecases/delete-post.usecase';
 
 const blogUseCases = [
   CreateBlogUseCase,
   UpdateBlogUseCase,
   DeleteBlogUseCase,
   GetBlogPostsUseCase
+];
+
+const postUseCases = [
+  CreatePostUseCase,
+  CreatePostForSpecificBlogUseCase,
+  UpdatePostUseCase,
+  DeletePostUseCase
 ];
 
 @Module({
@@ -39,9 +49,9 @@ const blogUseCases = [
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
     ...blogUseCases,
+    ...postUseCases,
     BlogsRepository,
     BlogsQueryRepository,
-    PostsService,
     PostsRepository,
     PostsQueryRepository,
     CommentsQueryRepository,
