@@ -38,6 +38,6 @@ import { JwtStrategy } from './guards/bearer/jwt.strategy';
     LocalStrategy,
     JwtStrategy,
   ],
-  exports: [UsersRepository, MongooseModule, JwtStrategy],
+  exports: [UsersRepository, MongooseModule, JwtStrategy, UsersQueryRepository],
 })
 export class UserAccountsModule {}

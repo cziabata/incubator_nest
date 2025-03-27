@@ -5,6 +5,7 @@ import {
   CommentatorInfo,
   CommentatorInfoSchema,
 } from './commentator-info.schema';
+import { CommentLike, CommentLikeSchema } from './like.schema';
 
 @Schema({ timestamps: true })
 export class Comment {
@@ -22,6 +23,9 @@ export class Comment {
 
   @Prop({ type: LikesInfoSchema, required: true, default: {} })
   likesInfo: LikesInfo;
+  
+  @Prop({ type: [CommentLikeSchema], required: true, default: [] })
+  likes: CommentLike[];
 
   get id() {
     return this._id.toString();

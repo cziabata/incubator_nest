@@ -21,6 +21,14 @@ import { CreatePostUseCase } from './posts/application/usecases/create-post.usec
 import { CreatePostForSpecificBlogUseCase } from './posts/application/usecases/create-post-for-specific-blog.usecase';
 import { UpdatePostUseCase } from './posts/application/usecases/update-post.usecase';
 import { DeletePostUseCase } from './posts/application/usecases/delete-post.usecase';
+import { CommentsRepository } from './comments/infrastructure/comments.repository';
+import { UpdateCommentUseCase } from './comments/application/usecases/update-comment.usecase';
+import { DeleteCommentUseCase } from './comments/application/usecases/delete-comment.usecase';
+import { UpdateCommentLikeStatusUseCase } from './comments/application/usecases/update-comment-like-status.usecase';
+import { CommentsService } from './comments/application/comments.service';
+import { UpdatePostLikeStatusUseCase } from './posts/application/usecases/update-post-like-status.usecase';
+import { PostsService } from './posts/application/posts.service';
+import { CreateCommentUseCase } from './comments/application/usecases/create-comment.usecase';
 
 const blogUseCases = [
   CreateBlogUseCase,
@@ -33,7 +41,15 @@ const postUseCases = [
   CreatePostUseCase,
   CreatePostForSpecificBlogUseCase,
   UpdatePostUseCase,
-  DeletePostUseCase
+  DeletePostUseCase,
+  UpdatePostLikeStatusUseCase
+];
+
+const commentUseCases = [
+  CreateCommentUseCase,
+  UpdateCommentUseCase,
+  DeleteCommentUseCase,
+  UpdateCommentLikeStatusUseCase
 ];
 
 @Module({
@@ -50,16 +66,23 @@ const postUseCases = [
   providers: [
     ...blogUseCases,
     ...postUseCases,
+    ...commentUseCases,
     BlogsRepository,
     BlogsQueryRepository,
     PostsRepository,
     PostsQueryRepository,
     CommentsQueryRepository,
+    CommentsRepository,
+    CommentsService,
+    PostsService,
   ],
   exports: [
     BlogsRepository,
     PostsRepository,
     CommentsQueryRepository,
+    CommentsRepository,
+    CommentsService,
+    PostsService,
     MongooseModule,
   ],
 })

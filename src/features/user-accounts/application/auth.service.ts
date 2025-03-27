@@ -46,13 +46,19 @@ export class AuthService {
       secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
       expiresIn: '60m',
     });
-    return { accessToken };
+
+    const refreshToken = this.jwtService.sign({ id: userId } as UserContextDto, {
+      secret: 'refresh-token-secret',
+      expiresIn: '24h',
+    });
+
+    return { accessToken, refreshToken };
   }
 
   async validateAndLogin(
     loginOrEmail: string,
     password: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
       throw UnauthorizedDomainException.create(

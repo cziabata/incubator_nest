@@ -6,6 +6,7 @@ import {
 } from './extended-likes.schema';
 import { CreatePostDomainDto } from './dto/create-post.domain.dto';
 import { UpdatePostDto } from '../dto/posts.dto';
+import { PostLike, PostLikeSchema } from './post-like.schema';
 
 @Schema({ timestamps: true })
 export class Post {
@@ -31,6 +32,45 @@ export class Post {
   @Prop({ type: ExtendedLikesInfoSchema, required: true, default: {} })
   extendedLikesInfo: ExtendedLikesInfo;
 
+  @Prop({ type: [PostLikeSchema], required: true, default: [] })
+  likes: PostLike[];
+
+  @Prop({
+    type: {
+      likesCount: { type: Number, required: true },
+      dislikesCount: { type: Number, required: true },
+      myStatus: { type: String, enum: ['None', 'Like', 'Dislike'], required: true },
+    },
+    required: true,
+    default: {
+      likesCount: 0,
+      dislikesCount: 0,
+      myStatus: 'None',
+    },
+    _id: false,
+  })
+  likesInfo: {
+    likesCount: number;
+    dislikesCount: number;
+    myStatus: string;
+  };
+
+  @Prop({
+    type: [{
+      addedAt: { type: Date, required: true },
+      userId: { type: String, required: true },
+      login: { type: String, required: true },
+    }],
+    required: true,
+    default: [],
+    _id: false,
+  })
+  newestLikes: {
+    addedAt: Date;
+    userId: string;
+    login: string;
+  }[];
+
   get id() {
     return this._id.toString();
   }
@@ -43,6 +83,13 @@ export class Post {
     post.blogId = dto.blogId;
     post.blogName = dto.blogName;
     post.extendedLikesInfo = dto.extendedLikesInfo;
+    post.likes = [];
+    post.likesInfo = {
+      likesCount: 0,
+      dislikesCount: 0,
+      myStatus: 'None',
+    };
+    post.newestLikes = [];
     return post as PostDocument;
   }
 
