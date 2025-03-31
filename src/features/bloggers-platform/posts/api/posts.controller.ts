@@ -36,6 +36,7 @@ import { JwtAuthGuard } from 'src/features/user-accounts/guards/bearer/jwt-auth.
 import { UsersQueryRepository } from '../../../user-accounts/infrastructure/query/users.query-repository';
 import { CreateCommentInputDto } from '../../comments/api/input-dto/create-comment.input-dto';
 import { CreateCommentCommand } from '../../comments/application/usecases/create-comment.usecase';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -78,6 +79,7 @@ export class PostsController {
   }
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   @ApiOperation({ summary: 'Create a post' })
   async createPost(
     @Body() createPostInputDto: CreatePostInputDto,
@@ -89,6 +91,7 @@ export class PostsController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(204)
   async updatePost(
     @Param('id') id: string,
@@ -98,6 +101,7 @@ export class PostsController {
   }
 
   @Delete(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(204)
   async deletePost(@Param('id') id: string): Promise<void> {
     await this.commandBus.execute(new DeletePostCommand(id));
