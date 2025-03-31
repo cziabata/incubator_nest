@@ -74,6 +74,7 @@ export class BlogsController {
   }
 
   @Post(':id/posts')
+  @UseGuards(BasicAuthGuard)
   @ApiOperation({ summary: 'Create a post for specific blog' })
   async createPostForSpecificBlog(
     @Param('id') id: string,
