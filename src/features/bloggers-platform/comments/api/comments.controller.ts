@@ -101,6 +101,14 @@ export class CommentsController {
     @Body() dto: LikeStatusInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
+    // Проверка существования комментария
+    let comment;
+    try {
+      comment = await this.commentsQueryRepository.getById(commentId);
+    } catch (error) {
+      throw new NotFoundException('Comment not found');
+    }
+
     // Обновление статуса лайка
     await this.commentsService.updateCommentLikeStatus(
       commentId,

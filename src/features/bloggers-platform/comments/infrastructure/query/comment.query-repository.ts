@@ -5,11 +5,14 @@ import { Comment, CommentModelType } from '../../domain/comment.entity';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
 import { GetCommentsQueryParams } from '../../api/input-dto/get-comments-query-params.input-dto';
 import { FilterQuery } from 'mongoose';
+import { Post, PostModelType } from '../../../posts/domain/post.entity';
 
 export class CommentsQueryRepository {
   constructor(
     @InjectModel(Comment.name)
     private CommentModel: CommentModelType,
+    @InjectModel(Post.name)
+    private PostModel: PostModelType,
   ) {}
 
   async getById(id: string): Promise<CommentViewDto> {
@@ -27,6 +30,11 @@ export class CommentsQueryRepository {
     postId: string,
     query: GetCommentsQueryParams,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
+    const post = await this.PostModel.findOne({ _id: postId });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
     const filter: FilterQuery<Comment> = { postId };
 
     const comments = await this.CommentModel.find(filter)

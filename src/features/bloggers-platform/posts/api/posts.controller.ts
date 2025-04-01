@@ -75,6 +75,11 @@ export class PostsController {
     @Param('id') id: string,
     @Query() query: GetCommentsQueryParams,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
+    // Проверяем существование поста
+    const post = await this.postsQueryRepository.getById(id);
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
     return this.commentsQueryRepository.getAllByPostId(id, query);
   }
 
