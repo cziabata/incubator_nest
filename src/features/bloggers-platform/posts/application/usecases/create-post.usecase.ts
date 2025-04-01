@@ -5,6 +5,7 @@ import { CreatePostDto } from "../../dto/posts.dto";
 import { PostsRepository } from "../../infrastructure/posts.repository";
 import { BlogsQueryRepository } from "../../../blogs/infrastructure/query/blogs.query-repository";
 import { CreatePostDomainDto } from "../../domain/dto/create-post.domain.dto";
+import { NotFoundException } from "@nestjs/common";
 
 export class CreatePostCommand {
     constructor(
@@ -22,7 +23,11 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     ) {}
 
     async execute(command: CreatePostCommand): Promise<string> {
+        // Проверяем существование блога
         const relatedBlog = await this.blogsQueryRepository.getById(command.dto.blogId);
+        if (!relatedBlog) {
+            throw new NotFoundException('Blog not found');
+        }
 
         const prepareNewPostDto: CreatePostDomainDto = {
             title: command.dto.title,
