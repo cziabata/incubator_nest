@@ -42,6 +42,7 @@ export function pipesSetup(app: INestApplication) {
       //соответственно применятся значения по-умолчанию
       //и методы классов dto
       transform: true,
+      stopAtFirstError: true,
       //Для преобразования ошибок класс валидатора в необходимый вид
       exceptionFactory: (errors) => {
         const formattedErrors = errorFormatter(errors);

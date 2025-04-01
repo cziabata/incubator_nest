@@ -15,8 +15,4 @@ export class UpdatePostInputDto {
   @IsNotEmpty()
   @MaxLength(1000)
   content: string;
-
-  @IsString()
-  @IsNotEmpty()
-  blogId: string;
 }
