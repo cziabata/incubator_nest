@@ -102,6 +102,11 @@ export class PostsController {
     @Param('id') id: string,
     @Body() updatePostInputDto: UpdatePostInputDto,
   ): Promise<void> {
+    // Проверяем существование поста
+    const post = await this.postsQueryRepository.getById(id);
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
     await this.commandBus.execute(new UpdatePostCommand(id, updatePostInputDto));
   }
 
