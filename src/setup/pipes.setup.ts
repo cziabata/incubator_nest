@@ -23,7 +23,9 @@ export const errorFormatter = (
 
       for (const key of constrainKeys) {
         errorsForResponse.push({
-          message: error.constraints[key] || '',
+          message: error.constraints[key]
+            ? `${error.constraints[key]}; Received value: ${error?.value}`
+            : '',
           key: error.property,
         });
       }
@@ -42,11 +44,13 @@ export function pipesSetup(app: INestApplication) {
       //соответственно применятся значения по-умолчанию
       //и методы классов dto
       transform: true,
+      //Выдавать первую ошибку для каждого поля
       stopAtFirstError: true,
       //Для преобразования ошибок класс валидатора в необходимый вид
       exceptionFactory: (errors) => {
         const formattedErrors = errorFormatter(errors);
-        return new BadRequestDomainException(formattedErrors);
+
+        throw new BadRequestDomainException(formattedErrors);
       },
     }),
   );
