@@ -12,9 +12,13 @@ import {
   HttpStatus,
   NotFoundException,
   ForbiddenException,
-  UnauthorizedException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PostsQueryRepository } from '../infrastructure/query/post.query-repository';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
@@ -37,6 +41,8 @@ import { UsersQueryRepository } from '../../../user-accounts/infrastructure/quer
 import { CreateCommentInputDto } from '../../comments/api/input-dto/create-comment.input-dto';
 import { CreateCommentCommand } from '../../comments/application/usecases/create-comment.usecase';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
+import { JwtOptionalAuthGuard } from 'src/features/user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserIfExistsFromRequest } from 'src/features/user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -50,19 +56,27 @@ export class PostsController {
   ) {}
 
   @Get()
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return all posts' })
   async getAllPosts(
     @Query() query: GetPostsQueryParams,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return this.postsQueryRepository.getAll(query);
+    const userId = user?.id;
+    return this.postsQueryRepository.getAll(query, userId);
   }
 
   @Get(':id')
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return post by ID' })
   @ApiResponse({ status: 200, description: 'Returns post', type: PostViewDto })
   @ApiResponse({ status: 404, description: 'Post not found' })
-  async getPostByID(@Param('id') id: string): Promise<PostViewDto> {
-    const post = await this.postsQueryRepository.getById(id);
+  async getPostByID(
+    @Param('id') id: string,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+  ): Promise<PostViewDto> {
+    const userId = user?.id;
+    const post = await this.postsQueryRepository.getById(id, userId);
     if (!post) {
       throw new NotFoundException('Post not found');
     }
@@ -107,7 +121,9 @@ export class PostsController {
     if (!post) {
       throw new NotFoundException('Post not found');
     }
-    await this.commandBus.execute(new UpdatePostCommand(id, updatePostInputDto));
+    await this.commandBus.execute(
+      new UpdatePostCommand(id, updatePostInputDto),
+    );
   }
 
   @Delete(':id')
@@ -137,7 +153,8 @@ export class PostsController {
     }
 
     // Получаем информацию о пользователе из базы данных
-    const userFromDb = await this.usersQueryRepository.getByIdOrNotFoundFail(userId);
+    const userFromDb =
+      await this.usersQueryRepository.getByIdOrNotFoundFail(userId);
 
     // Обновляем статус лайка
     await this.postsService.updatePostLikeStatus(
@@ -152,7 +169,11 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create comment for specific post' })
-  @ApiResponse({ status: 201, description: 'Comment created successfully', type: CommentViewDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Comment created successfully',
+    type: CommentViewDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Post not found' })
   async createComment(
@@ -167,7 +188,9 @@ export class PostsController {
     }
 
     // Получаем информацию о пользователе
-    const userFromDb = await this.usersQueryRepository.getByIdOrNotFoundFail(user.id);
+    const userFromDb = await this.usersQueryRepository.getByIdOrNotFoundFail(
+      user.id,
+    );
 
     // Создаем новый комментарий
     const newCommentDto = {

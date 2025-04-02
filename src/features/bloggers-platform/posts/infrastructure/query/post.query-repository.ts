@@ -12,7 +12,7 @@ export class PostsQueryRepository {
     private PostModel: PostModelType,
   ) {}
 
-  async getById(id: string): Promise<PostViewDto> {
+  async getById(id: string, userId?: string): Promise<PostViewDto> {
     const user = await this.PostModel.findOne({
       _id: id,
     });
@@ -21,11 +21,12 @@ export class PostsQueryRepository {
       throw new NotFoundException('post not found');
     }
 
-    return PostViewDto.mapToView(user);
+    return PostViewDto.mapToView(user, userId);
   }
 
   async getAll(
     query: GetPostsQueryParams,
+    userId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const filter: FilterQuery<Post> = {};
     const posts = await this.PostModel.find(filter)
@@ -35,7 +36,7 @@ export class PostsQueryRepository {
 
     const totalCount = await this.PostModel.countDocuments(filter);
 
-    const items = posts.map(PostViewDto.mapToView);
+    const items = posts.map((post) => PostViewDto.mapToView(post, userId));
 
     return PaginatedViewDto.mapToView({
       items,

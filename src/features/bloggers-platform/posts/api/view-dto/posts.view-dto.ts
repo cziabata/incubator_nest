@@ -19,10 +19,16 @@ export class ExtendedLikesInfoViewDto {
   @ApiProperty({ description: 'Количество дизлайков' })
   dislikesCount: number;
 
-  @ApiProperty({ description: 'Статус лайка текущего пользователя', enum: ['None', 'Like', 'Dislike'] })
+  @ApiProperty({
+    description: 'Статус лайка текущего пользователя',
+    enum: ['None', 'Like', 'Dislike'],
+  })
   myStatus: string;
 
-  @ApiProperty({ description: 'Информация о последних лайках', type: [LikeDetailsViewDto] })
+  @ApiProperty({
+    description: 'Информация о последних лайках',
+    type: [LikeDetailsViewDto],
+  })
   newestLikes: LikeDetailsViewDto[];
 }
 
@@ -51,7 +57,24 @@ export class PostViewDto {
   @ApiProperty({ description: 'Расширенная информация о лайках' })
   extendedLikesInfo: ExtendedLikesInfoViewDto;
 
-  static mapToView(post: PostDocument): PostViewDto {
+  static mapToView(post: PostDocument, userId?: string): PostViewDto {
+    const status =
+      !userId || post.likes.length === 0
+        ? 'None'
+        : (post.likes.find((l) => l.userId === userId)?.status ?? 'None');
+
+    const newestLikes = post.likes
+      .filter((l) => l.status === 'Like')
+      .sort(
+        (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
+      )
+      .slice(0, 3)
+      .map((l) => ({
+        userId: l.userId,
+        login: l.login,
+        addedAt: l.addedAt,
+      }));
+
     const dto = new PostViewDto();
     dto.id = post.id;
     dto.title = post.title;
@@ -63,12 +86,8 @@ export class PostViewDto {
     dto.extendedLikesInfo = {
       likesCount: post.likesInfo.likesCount,
       dislikesCount: post.likesInfo.dislikesCount,
-      myStatus: post.likesInfo.myStatus,
-      newestLikes: post.newestLikes.map(like => ({
-        userId: like.userId,
-        login: like.login,
-        addedAt: like.addedAt,
-      })),
+      myStatus: status,
+      newestLikes: newestLikes,
     };
     return dto;
   }
