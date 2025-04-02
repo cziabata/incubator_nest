@@ -94,7 +94,9 @@ export class BlogsController {
     @Param('id') id: string,
     @Body() updateBlogInputDto: UpdateBlogInputDto,
   ): Promise<void> {
-    await this.commandBus.execute(new UpdateBlogCommand(id, updateBlogInputDto));
+    await this.commandBus.execute(
+      new UpdateBlogCommand(id, updateBlogInputDto),
+    );
   }
 
   @Delete(':id')

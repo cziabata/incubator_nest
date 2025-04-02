@@ -8,6 +8,8 @@ export class CreateCommentInputDto {
     maxLength: 300,
   })
   @IsString()
-  @Length(20, 300, { message: 'Content length should be from 20 to 300 symbols' })
+  @Length(20, 300, {
+    message: 'Content length should be from 20 to 300 symbols',
+  })
   content: string;
-} 
+}

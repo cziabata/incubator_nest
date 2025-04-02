@@ -11,4 +11,4 @@ export class UpdatePostLikeStatusInputDto {
   @IsEnum(['None', 'Like', 'Dislike'], { message: 'Invalid like status' })
   @IsNotEmpty()
   likeStatus: LikeStatus;
-} 
+}

@@ -8,6 +8,6 @@ export function exceptionFilterSetup(app: INestApplication) {
   app.useGlobalFilters(
     new AllExceptionsFilter(),
     new DomainExceptionsFilter(),
-    new ValidationExceptionsFilter(),
+    // new ValidationExceptionsFilter(),
   );
 }
