@@ -36,12 +36,12 @@ import { PostsService } from '../application/posts.service';
 import { UpdatePostLikeStatusInputDto } from './input-dto/update-post-like-status.input-dto';
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-from-request.decorator';
 import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
-import { JwtAuthGuard } from 'src/features/user-accounts/guards/bearer/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
 import { UsersQueryRepository } from '../../../user-accounts/infrastructure/query/users.query-repository';
 import { CreateCommentInputDto } from '../../comments/api/input-dto/create-comment.input-dto';
 import { CreateCommentCommand } from '../../comments/application/usecases/create-comment.usecase';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
-import { JwtOptionalAuthGuard } from 'src/features/user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @ApiTags('Posts')
