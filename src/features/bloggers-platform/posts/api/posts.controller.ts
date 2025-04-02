@@ -42,7 +42,7 @@ import { CreateCommentInputDto } from '../../comments/api/input-dto/create-comme
 import { CreateCommentCommand } from '../../comments/application/usecases/create-comment.usecase';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 import { JwtOptionalAuthGuard } from 'src/features/user-accounts/guards/bearer/jwt-optional-auth.guard';
-import { ExtractUserIfExistsFromRequest } from 'src/features/user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
+import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @ApiTags('Posts')
 @Controller('posts')
