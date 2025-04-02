@@ -23,7 +23,7 @@ export class Comment {
 
   @Prop({ type: LikesInfoSchema, required: true, default: {} })
   likesInfo: LikesInfo;
-  
+
   @Prop({ type: [CommentLikeSchema], required: true, default: [] })
   likes: CommentLike[];
 
