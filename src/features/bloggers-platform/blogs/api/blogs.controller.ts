@@ -28,6 +28,9 @@ import { DeleteBlogCommand } from '../application/usecases/delete-blog.usecase';
 import { GetBlogPostsQuery } from '../application/usecases/get-blog-posts.usecase';
 import { CreatePostForSpecificBlogCommand } from '../../posts/application/usecases/create-post-for-specific-blog.usecase';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
+import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @Controller('blogs')
 export class BlogsController {
@@ -74,16 +77,18 @@ export class BlogsController {
   }
 
   @Post(':id/posts')
-  @UseGuards(BasicAuthGuard)
+  @UseGuards(BasicAuthGuard, JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Create a post for specific blog' })
   async createPostForSpecificBlog(
     @Param('id') id: string,
     @Body() createPostForSpecificInputDto: CreatePostForSpecificBlogInputDto,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PostViewDto> {
+    const userId = user?.id;
     const postId = await this.commandBus.execute(
       new CreatePostForSpecificBlogCommand(id, createPostForSpecificInputDto),
     );
-    return this.postsQueryRepository.getById(postId);
+    return this.postsQueryRepository.getById(postId, userId);
   }
 
   @Put(':id')

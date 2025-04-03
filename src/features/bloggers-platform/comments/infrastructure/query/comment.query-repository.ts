@@ -15,7 +15,7 @@ export class CommentsQueryRepository {
     private PostModel: PostModelType,
   ) {}
 
-  async getById(id: string): Promise<CommentViewDto> {
+  async getById(id: string, userId?: string): Promise<CommentViewDto> {
     const comment = await this.CommentModel.findOne({
       _id: id,
     });
@@ -23,12 +23,13 @@ export class CommentsQueryRepository {
     if (!comment) {
       throw new NotFoundException('comment not found');
     }
-    return CommentViewDto.mapToView(comment);
+    return CommentViewDto.mapToView(comment, userId);
   }
 
   async getAllByPostId(
     postId: string,
     query: GetCommentsQueryParams,
+    userId?: string,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const post = await this.PostModel.findOne({ _id: postId });
     if (!post) {
@@ -44,7 +45,9 @@ export class CommentsQueryRepository {
 
     const totalCount = await this.CommentModel.countDocuments(filter);
 
-    const items = comments.map(CommentViewDto.mapToView);
+    const items = comments.map((comment) =>
+      CommentViewDto.mapToView(comment, userId),
+    );
 
     return PaginatedViewDto.mapToView({
       items,

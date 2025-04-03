@@ -1,5 +1,22 @@
-import { Controller, Get, Param, Put, Delete, Body, HttpCode, UseGuards, ForbiddenException, NotFoundException, HttpStatus } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Param,
+  Put,
+  Delete,
+  Body,
+  HttpCode,
+  UseGuards,
+  ForbiddenException,
+  NotFoundException,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CommentsQueryRepository } from '../infrastructure/query/comment.query-repository';
 import { CommentViewDto } from './view-dto/comments.view-dto';
 import { UpdateCommentInputDto } from './input-dto/update-comment.input-dto';
@@ -8,6 +25,8 @@ import { CommentsService } from '../application/comments.service';
 import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
 import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-from-request.decorator';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @ApiTags('Comments')
 @Controller('comments')
@@ -18,11 +37,20 @@ export class CommentsController {
   ) {}
 
   @Get(':id')
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return comment by ID' })
-  @ApiResponse({ status: 200, description: 'Returns comment', type: CommentViewDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns comment',
+    type: CommentViewDto,
+  })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async getCommentByID(@Param('id') id: string): Promise<CommentViewDto> {
-    return this.commentsQueryRepository.getById(id);
+  async getCommentByID(
+    @Param('id') id: string,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+  ): Promise<CommentViewDto> {
+    const userId = user?.id;
+    return this.commentsQueryRepository.getById(id, userId);
   }
 
   @Put(':id')
@@ -33,7 +61,10 @@ export class CommentsController {
   @ApiResponse({ status: 204, description: 'Comment updated successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - user is not the comment owner' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - user is not the comment owner',
+  })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async updateComment(
     @Param('id') commentId: string,
@@ -50,7 +81,9 @@ export class CommentsController {
 
     // Проверка права на редактирование
     if (comment.commentatorInfo.userId !== user.id) {
-      throw new ForbiddenException('You try to edit the comment that is not your own');
+      throw new ForbiddenException(
+        'You try to edit the comment that is not your own',
+      );
     }
 
     // Обновление комментария
@@ -64,7 +97,10 @@ export class CommentsController {
   @ApiOperation({ summary: 'Delete comment by ID' })
   @ApiResponse({ status: 204, description: 'Comment deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - user is not the comment owner' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - user is not the comment owner',
+  })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async deleteComment(
     @Param('id') commentId: string,
@@ -80,7 +116,9 @@ export class CommentsController {
 
     // Проверка права на удаление
     if (comment.commentatorInfo.userId !== user.id) {
-      throw new ForbiddenException('You try to delete the comment that is not your own');
+      throw new ForbiddenException(
+        'You try to delete the comment that is not your own',
+      );
     }
 
     // Удаление комментария

@@ -13,4 +13,4 @@ export class CommentLike {
   createdAt: Date;
 }
 
-export const CommentLikeSchema = SchemaFactory.createForClass(CommentLike); 
+export const CommentLikeSchema = SchemaFactory.createForClass(CommentLike);

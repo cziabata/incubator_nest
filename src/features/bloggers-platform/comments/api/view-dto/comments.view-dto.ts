@@ -14,7 +14,12 @@ export class CommentViewDto {
     userLogin: string;
   };
 
-  static mapToView(comment: CommentDocument): CommentViewDto {
+  static mapToView(comment: CommentDocument, userId?: string): CommentViewDto {
+    const status =
+      !userId || comment.likes.length === 0
+        ? 'None'
+        : (comment.likes.find((l) => l.userId === userId)?.status ?? 'None');
+
     const dto = new CommentViewDto();
     dto.id = comment._id.toString();
     dto.content = comment.content;
@@ -22,7 +27,7 @@ export class CommentViewDto {
     dto.likesInfo = {
       likesCount: comment.likesInfo.likesCount,
       dislikesCount: comment.likesInfo.dislikesCount,
-      myStatus: comment.likesInfo.myStatus,
+      myStatus: status,
     };
     dto.commentatorInfo = {
       userId: comment.commentatorInfo.userId,

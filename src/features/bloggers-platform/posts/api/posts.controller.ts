@@ -84,17 +84,20 @@ export class PostsController {
   }
 
   @Get(':id/comments')
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return all comments for post' })
   async getAllPostComments(
     @Param('id') id: string,
     @Query() query: GetCommentsQueryParams,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
+    const userId = user?.id;
     // Проверяем существование поста
     const post = await this.postsQueryRepository.getById(id);
     if (!post) {
       throw new NotFoundException('Post not found');
     }
-    return this.commentsQueryRepository.getAllByPostId(id, query);
+    return this.commentsQueryRepository.getAllByPostId(id, query, userId);
   }
 
   @Post()
