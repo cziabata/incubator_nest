@@ -35,6 +35,7 @@ export class PostsRepository {
   async getPostsByBlogId(
     blogId: string,
     query: GetPostsQueryParams,
+    userId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const filter: FilterQuery<Post> = { blogId };
     const posts = await this.PostModel.find(filter)
@@ -44,7 +45,7 @@ export class PostsRepository {
 
     const totalCount = await this.PostModel.countDocuments(filter);
 
-    const items = posts.map((post) => PostViewDto.mapToView(post));
+    const items = posts.map((post) => PostViewDto.mapToView(post, userId));
 
     return PaginatedViewDto.mapToView({
       items,

@@ -56,12 +56,15 @@ export class BlogsController {
   }
 
   @Get(':id/posts')
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return posts by blog ID' })
   async getBlogPosts(
     @Param('id') id: string,
     @Query() query: GetPostsQueryParams,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return this.queryBus.execute(new GetBlogPostsQuery(id, query));
+    const userId = user?.id;
+    return this.queryBus.execute(new GetBlogPostsQuery(id, query, userId));
   }
 
   @Post()
