@@ -13,6 +13,11 @@ import {
   Comment,
   CommentModelType,
 } from '../bloggers-platform/comments/domain/comment.entity';
+import {
+  Session,
+  SessionModelType,
+} from '../user-accounts/domain/session.entity';
+import { BlacklistedToken, BlacklistedTokenModelType } from '../user-accounts/domain/blacklisted-token.entity';
 
 @Controller('testing')
 export class TestingController {
@@ -25,6 +30,10 @@ export class TestingController {
     private BlogModel: BlogModelType,
     @InjectModel(Comment.name)
     private CommentModel: CommentModelType,
+    @InjectModel(Session.name)
+    private SessionModel: SessionModelType,
+    @InjectModel(BlacklistedToken.name)
+    private BlacklistedTokenModel: BlacklistedTokenModelType,
   ) {}
 
   @Delete('all-data')
@@ -34,5 +43,7 @@ export class TestingController {
     await this.PostModel.deleteMany();
     await this.BlogModel.deleteMany();
     await this.CommentModel.deleteMany();
+    await this.SessionModel.deleteMany();
+    await this.BlacklistedTokenModel.deleteMany();
   }
 }

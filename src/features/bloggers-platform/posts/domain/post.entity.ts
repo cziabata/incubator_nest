@@ -39,7 +39,11 @@ export class Post {
     type: {
       likesCount: { type: Number, required: true },
       dislikesCount: { type: Number, required: true },
-      myStatus: { type: String, enum: ['None', 'Like', 'Dislike'], required: true },
+      myStatus: {
+        type: String,
+        enum: ['None', 'Like', 'Dislike'],
+        required: true,
+      },
     },
     required: true,
     default: {
@@ -56,11 +60,13 @@ export class Post {
   };
 
   @Prop({
-    type: [{
-      addedAt: { type: Date, required: true },
-      userId: { type: String, required: true },
-      login: { type: String, required: true },
-    }],
+    type: [
+      {
+        addedAt: { type: Date, required: true },
+        userId: { type: String, required: true },
+        login: { type: String, required: true },
+      },
+    ],
     required: true,
     default: [],
     _id: false,

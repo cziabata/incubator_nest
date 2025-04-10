@@ -11,6 +11,10 @@ import {
 } from 'src/core/exceptions/domain-exceptions';
 import { EmailService } from 'src/features/notifications/email.service';
 import { InjectModel } from '@nestjs/mongoose';
+import { SessionService } from './session.service';
+import { addSeconds } from 'date-fns';
+import { CreateSessionDto } from '../dto/create-session.dto';
+import { UpdateSessionDomainDto } from '../domain/dto/update-session.domain.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +24,7 @@ export class AuthService {
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
     private cryptoService: CryptoService,
+    private sessionService: SessionService,
     private emailService: EmailService,
   ) {}
 
@@ -41,16 +46,67 @@ export class AuthService {
     return { id: user.id.toString() };
   }
 
-  async login(userId: string) {
+  async login(userId: string, deviceName: string, ip: string) {
+    const deviceId = await this.sessionService.generateDeviceId();
+
+    const iat = new Date(Date.now());
+    const refreshTokenSeconds = 20;
+    const exp = addSeconds(iat, refreshTokenSeconds);
+
     const accessToken = this.jwtService.sign({ id: userId } as UserContextDto, {
       secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
-      expiresIn: '60m',
+      expiresIn: '10s',
     });
 
-    const refreshToken = this.jwtService.sign({ id: userId } as UserContextDto, {
-      secret: 'refresh-token-secret',
-      expiresIn: '24h',
-    });
+    const refreshToken = this.jwtService.sign(
+      { id: userId } as UserContextDto,
+      {
+        secret: 'refresh-token-secret',
+        expiresIn: '20s',
+      },
+    );
+
+    const newSession: CreateSessionDto = {
+      user_id: userId,
+      device_id: deviceId,
+      device_name: deviceName,
+      ip,
+      iat: iat.toISOString(),
+      exp,
+    };
+
+    await this.sessionService.createSession(newSession);
+
+    return { accessToken, refreshToken };
+  }
+
+  async refreshTokens(userId: string, deviceId: string) {
+    const iat = new Date(Date.now());
+    const refreshTokenSeconds = 20;
+    const exp = addSeconds(iat, refreshTokenSeconds);
+
+    const accessToken = this.jwtService.sign(
+      { id: userId, iat: iat.getTime(), deviceId } as UserContextDto,
+      {
+        secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
+        expiresIn: '10s',
+      },
+    );
+
+    const refreshToken = this.jwtService.sign(
+      { id: userId } as UserContextDto,
+      {
+        secret: 'refresh-token-secret',
+        expiresIn: '20s',
+      },
+    );
+
+    const sessionUpdates: UpdateSessionDomainDto = {
+      iat: iat.toISOString(),
+      exp,
+    };
+
+    await this.sessionService.updateSession(deviceId, sessionUpdates);
 
     return { accessToken, refreshToken };
   }
@@ -58,6 +114,8 @@ export class AuthService {
   async validateAndLogin(
     loginOrEmail: string,
     password: string,
+    deviceName: string,
+    ip: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
@@ -74,7 +132,7 @@ export class AuthService {
         'Invalid login or password or email',
       );
     }
-    return await this.login(user.id);
+    return await this.login(user.id, deviceName, ip);
   }
 
   async createUser(dto: CreateUserDto): Promise<void> {
@@ -127,7 +185,10 @@ export class AuthService {
       throw BadRequestDomainException.create('Email does not exist', 'email');
     }
     if (user.isEmailConfirmed) {
-      throw BadRequestDomainException.create('Email already confirmed', 'email');
+      throw BadRequestDomainException.create(
+        'Email already confirmed',
+        'email',
+      );
     }
 
     const confirmationCode = crypto.randomUUID();
@@ -149,10 +210,16 @@ export class AuthService {
       throw BadRequestDomainException.create('Email already confirmed', 'code');
     }
     if (!user.expirationDate || new Date() > user.expirationDate) {
-      throw BadRequestDomainException.create('Confirmation code expired', 'code');
+      throw BadRequestDomainException.create(
+        'Confirmation code expired',
+        'code',
+      );
     }
     if (user.confirmationCode !== code) {
-      throw BadRequestDomainException.create('Invalid confirmation code', 'code');
+      throw BadRequestDomainException.create(
+        'Invalid confirmation code',
+        'code',
+      );
     }
     user.isEmailConfirmed = true;
     await this.usersRepository.save(user);
@@ -183,10 +250,16 @@ export class AuthService {
       throw BadRequestDomainException.create('Email already confirmed', 'code');
     }
     if (!user.expirationDate || new Date() > user.expirationDate) {
-      throw BadRequestDomainException.create('Confirmation code expired', 'code');
+      throw BadRequestDomainException.create(
+        'Confirmation code expired',
+        'code',
+      );
     }
     if (user.confirmationCode !== code) {
-      throw BadRequestDomainException.create('Invalid confirmation code', 'code');
+      throw BadRequestDomainException.create(
+        'Invalid confirmation code',
+        'code',
+      );
     }
 
     user.passwordHash =

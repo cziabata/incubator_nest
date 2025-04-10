@@ -6,6 +6,7 @@ import {
   Post,
   UseGuards,
   Res,
+  Req,
 } from '@nestjs/common';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { AuthService } from '../application/auth.service';
@@ -21,7 +22,8 @@ import { ExtractUserFromRequest } from '../guards/decorators/param/extract-user-
 import { UserContextDto } from '../guards/dto/user-context.dto';
 import { MeViewDto } from './view-dto/users.view-dto';
 import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { RefreshTokenGuard } from '../guards/bearer/refresh-token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -34,8 +36,6 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async createUser(@Body() body: CreateUserInputDto): Promise<void> {
-    console.log('registration', body.login, body.password);
-    console.log('registration', body.email);
     await this.authService.createUser(body);
   }
 
@@ -45,7 +45,6 @@ export class AuthController {
   async resendConfirmationCode(
     @Body() body: ResendRegistrationEmailInputDto,
   ): Promise<void> {
-    console.log('registration-email-resending', body.email);
     await this.authService.resendConfirmationCode(body.email);
   }
 
@@ -55,7 +54,6 @@ export class AuthController {
   async confirmRegistration(
     @Body() body: ConfirmRegistrationInputDto,
   ): Promise<void> {
-    console.log('registration-confirmation', body.code);
     await this.authService.confirmRegistration(body.code);
   }
 
@@ -85,11 +83,22 @@ export class AuthController {
   async login(
     @Body() body: LoginInputDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
-    const { accessToken, refreshToken } = await this.authService.validateAndLogin(
-      body.loginOrEmail,
-      body.password,
-    );
+    const ip =
+      req.ip ||
+      req.headers['x-forwarded-for']?.toString() ||
+      req.socket.remoteAddress ||
+      'unknown';
+    const deviceName = req.headers['user-agent'] || 'unknown';
+
+    const { accessToken, refreshToken } =
+      await this.authService.validateAndLogin(
+        body.loginOrEmail,
+        body.password,
+        deviceName,
+        ip,
+      );
 
     // Устанавливаем refreshToken в cookie
     res.cookie('refreshToken', refreshToken, {
@@ -105,5 +114,29 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@ExtractUserFromRequest() user: UserContextDto): Promise<MeViewDto> {
     return this.authQueryRepository.me(user.id);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('refresh-token')
+  async refreshToken(@Req() req, @Res({ passthrough: true }) res: Response) {
+    // User and session data are now available in the request
+    const userId = req.user.id;
+    const sessionData = req.user.session;
+
+    // Generate new tokens
+    const { accessToken, refreshToken } = await this.authService.refreshTokens(
+      userId,
+      sessionData.deviceId,
+    );
+
+    // Set the new refresh token as a cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true, // Set to true if using HTTPS
+      sameSite: 'none', // Adjust according to your needs
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    return { accessToken };
   }
 }
