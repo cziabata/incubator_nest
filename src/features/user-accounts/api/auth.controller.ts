@@ -80,6 +80,11 @@ export class AuthController {
   @HttpCode(200)
   @ApiResponse({ status: 200, description: 'Success' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 429,
+    description:
+      'Too Many Requests - More than 5 attempts from one IP-address during 10 seconds',
+  })
   async login(
     @Body() body: LoginInputDto,
     @Res({ passthrough: true }) res: Response,
