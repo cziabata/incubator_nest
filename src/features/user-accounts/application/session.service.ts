@@ -6,6 +6,11 @@ import { CreateSessionDto } from '../dto/create-session.dto';
 import { SessionModelType, Session } from '../domain/session.entity';
 import { UpdateSessionDomainDto } from '../domain/dto/update-session.domain.dto';
 import { InjectModel } from '@nestjs/mongoose';
+import {
+  BadRequestDomainException,
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from 'src/core/exceptions/domain-exceptions';
 
 @Injectable()
 export class SessionService {
@@ -29,25 +34,28 @@ export class SessionService {
   async deleteActiveSessionById(
     deviceId: string,
     userId: string,
-  ): Promise<number> {
+  ): Promise<void> {
     const isSessionsExists =
       await this.sessionQueryRepository.getActiveDeviceById(deviceId);
     if (!isSessionsExists) {
-      return 404;
+      throw NotFoundDomainException.create('session not found');
     }
     const isUserHasSuchDevice =
       await this.sessionRepository.checkIfUserHasSuchDevice(userId, deviceId);
     if (!isUserHasSuchDevice) {
-      return 403;
+      throw ForbiddenDomainException.create(
+        'user has no such device, forbidden',
+      );
     }
     const result = await this.sessionRepository.deleteActiveSessionByDeviceId(
       userId,
       deviceId,
     );
     if (!result) {
-      return 500;
+      throw BadRequestDomainException.create(
+        'internal server error, bad request',
+      );
     }
-    return 204;
   }
   async createSession(newSession: CreateSessionDto) {
     const session = this.sessionModel.createInstance(newSession);
