@@ -109,6 +109,21 @@ export class AuthController {
     return { accessToken };
   }
 
+  @UseGuards(RefreshTokenGuard)
+  @Post('logout')
+  @HttpCode(204)
+  async logout(
+    @Req() req,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const userId = req.user.id;
+    const deviceId = req.session?.deviceId as string;
+    await this.authService.logout(userId, deviceId);
+
+    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken');
+  }
+
   @ApiBearerAuth()
   @Get('me')
   @UseGuards(JwtAuthGuard)

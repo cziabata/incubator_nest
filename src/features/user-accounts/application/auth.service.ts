@@ -80,6 +80,10 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async logout(userId: string, deviceId: string) {
+    await this.sessionService.deleteActiveSessionById(deviceId, userId);
+  }
+
   async refreshTokens(userId: string, deviceId: string) {
     const iat = new Date(Date.now());
     const refreshTokenSeconds = 20;
