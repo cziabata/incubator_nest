@@ -15,6 +15,16 @@ import { SessionService } from './session.service';
 import { addSeconds } from 'date-fns';
 import { CreateSessionDto } from '../dto/create-session.dto';
 import { UpdateSessionDomainDto } from '../domain/dto/update-session.domain.dto';
+import { BlacklistedRefreshTokenRepository } from '../infrastructure/blacklisted-refresh-token.repository';
+import {
+  BlacklistedToken,
+  BlacklistedTokenModelType,
+} from '../domain/blacklisted-token.entity';
+
+// TO DO
+const REFRESH_TOKEN_SECONDS = 1800; // 20
+const ACCESS_EXPIRES_IN = '60m'; // "10s"
+const REFRESH_EXPIRES_IN = '60m'; // "20s"
 
 @Injectable()
 export class AuthService {
@@ -26,6 +36,9 @@ export class AuthService {
     private cryptoService: CryptoService,
     private sessionService: SessionService,
     private emailService: EmailService,
+    @InjectModel(BlacklistedToken.name)
+    private BlacklistedTokenModel: BlacklistedTokenModelType,
+    private readonly refreshTokenRepository: BlacklistedRefreshTokenRepository,
   ) {}
 
   async validateUser(
@@ -47,22 +60,34 @@ export class AuthService {
   }
 
   async login(userId: string, deviceName: string, ip: string) {
-    const deviceId = await this.sessionService.generateDeviceId();
+    // Check for existing session with same device name
+    const existingSessions = await this.sessionService.getAllActiveSessions(userId);
+    const existingSession = existingSessions.find(session => session.title === deviceName);
+    
+    let deviceId;
+    if (existingSession) {
+      deviceId = existingSession.deviceId;
+    } else {
+      deviceId = await this.sessionService.generateDeviceId();
+    }
 
     const iat = new Date(Date.now());
-    const refreshTokenSeconds = 20;
-    const exp = addSeconds(iat, refreshTokenSeconds);
+    const exp = addSeconds(iat, REFRESH_TOKEN_SECONDS);
 
     const accessToken = this.jwtService.sign({ id: userId } as UserContextDto, {
-      secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
-      expiresIn: '10s',
+      secret: 'access-token-secret',
+      expiresIn: ACCESS_EXPIRES_IN,
     });
 
     const refreshToken = this.jwtService.sign(
-      { id: userId } as UserContextDto,
+      { 
+        id: userId, 
+        deviceId: deviceId,
+        iat: Math.floor(iat.getTime() / 1000)
+      },
       {
         secret: 'refresh-token-secret',
-        expiresIn: '20s',
+        expiresIn: REFRESH_EXPIRES_IN,
       },
     );
 
@@ -84,24 +109,49 @@ export class AuthService {
     await this.sessionService.deleteActiveSessionById(deviceId, userId);
   }
 
-  async refreshTokens(userId: string, deviceId: string) {
+  async refreshTokens(
+    userId: string,
+    deviceId: string,
+    oldRefreshToken: string,
+  ) {
+    if (!oldRefreshToken) {
+      throw UnauthorizedDomainException.create('Refresh token is missing');
+    }
+
+    // Добавление токена в черный список
+    const oldRefreshTokenInstance = this.BlacklistedTokenModel.createInstance({
+      token: oldRefreshToken,
+    });
+    await this.refreshTokenRepository.save(oldRefreshTokenInstance);
+
+    // Проверка существования сессии
+    const sessions = await this.sessionService.getAllActiveSessions(userId);
+    const session = sessions.find(s => s.deviceId === deviceId);
+    
+    if (!session) {
+      throw UnauthorizedDomainException.create('Session not found');
+    }
+
     const iat = new Date(Date.now());
-    const refreshTokenSeconds = 20;
-    const exp = addSeconds(iat, refreshTokenSeconds);
+    const exp = addSeconds(iat, REFRESH_TOKEN_SECONDS);
 
     const accessToken = this.jwtService.sign(
-      { id: userId, iat: iat.getTime(), deviceId } as UserContextDto,
+      { id: userId },
       {
-        secret: 'access-token-secret', //process.env.AC_SECRET || 'your_secret_key'
-        expiresIn: '10s',
+        secret: 'access-token-secret',
+        expiresIn: ACCESS_EXPIRES_IN,
       },
     );
 
     const refreshToken = this.jwtService.sign(
-      { id: userId } as UserContextDto,
+      { 
+        id: userId, 
+        deviceId: deviceId,
+        iat: Math.floor(iat.getTime() / 1000)
+      },
       {
         secret: 'refresh-token-secret',
-        expiresIn: '20s',
+        expiresIn: REFRESH_EXPIRES_IN,
       },
     );
 
@@ -110,7 +160,11 @@ export class AuthService {
       exp,
     };
 
-    await this.sessionService.updateSession(deviceId, sessionUpdates);
+    try {
+      await this.sessionService.updateSession(deviceId, sessionUpdates);
+    } catch (error) {
+      throw UnauthorizedDomainException.create('Failed to update session');
+    }
 
     return { accessToken, refreshToken };
   }

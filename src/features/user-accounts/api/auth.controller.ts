@@ -7,6 +7,7 @@ import {
   UseGuards,
   Res,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { AuthService } from '../application/auth.service';
@@ -16,7 +17,7 @@ import { ConfirmRegistrationInputDto } from './input-dto/confirm-registration.in
 import { PasswordRecoveryInputDto } from './input-dto/password-recovery.input-dto';
 import { ConfirmPasswordRecoveryInputDto } from './input-dto/confirm-password-recovery.input-dto';
 import { LoginInputDto } from './input-dto/login.input-dto';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards/bearer/jwt-auth.guard';
 import { ExtractUserFromRequest } from '../guards/decorators/param/extract-user-from-request.decorator';
 import { UserContextDto } from '../guards/dto/user-context.dto';
@@ -104,11 +105,13 @@ export class AuthController {
         deviceName,
         ip,
       );
-
+    
     // Устанавливаем refreshToken в cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
     return { accessToken };
@@ -121,17 +124,21 @@ export class AuthController {
     @Req() req,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
+    if (!req.user || !req.user.id || !req.user.session?.deviceId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    
     const userId = req.user.id;
-    const deviceId = req.session?.deviceId as string;
+    const deviceId = req.user.session.deviceId;
+    
     await this.authService.logout(userId, deviceId);
 
     res.clearCookie('refreshToken');
     res.clearCookie('accessToken');
   }
 
-  @ApiBearerAuth()
-  @Get('me')
   @UseGuards(JwtAuthGuard)
+  @Get('me')
   me(@ExtractUserFromRequest() user: UserContextDto): Promise<MeViewDto> {
     return this.authQueryRepository.me(user.id);
   }
@@ -139,22 +146,32 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh-token')
   async refreshToken(@Req() req, @Res({ passthrough: true }) res: Response) {
+    if (!req.user || !req.user.id || !req.user.session?.deviceId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    
     // User and session data are now available in the request
     const userId = req.user.id;
     const sessionData = req.user.session;
+    const oldRefreshToken = req.cookies.refreshToken;
+    
+    if (!oldRefreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
 
     // Generate new tokens
     const { accessToken, refreshToken } = await this.authService.refreshTokens(
       userId,
       sessionData.deviceId,
+      oldRefreshToken,
     );
 
     // Set the new refresh token as a cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true, // Set to true if using HTTPS
-      sameSite: 'none', // Adjust according to your needs
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     return { accessToken };

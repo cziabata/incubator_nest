@@ -15,7 +15,22 @@ export class SessionRepository {
   ) {}
 
   async createSession(newSession: SessionDocument) {
-    await newSession.save();
+    const existingSession = await this.SessionModel.findOne({
+      user_id: newSession.user_id,
+      device_id: newSession.device_id
+    });
+
+    if (existingSession) {
+      // Update existing session
+      existingSession.iat = newSession.iat;
+      existingSession.exp = newSession.exp;
+      existingSession.device_name = newSession.device_name;
+      existingSession.ip = newSession.ip;
+      await existingSession.save();
+    } else {
+      // Create new session
+      await newSession.save();
+    }
   }
 
   async deleteAllActiveSessions(

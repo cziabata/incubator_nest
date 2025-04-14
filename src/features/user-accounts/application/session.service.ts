@@ -31,15 +31,20 @@ export class SessionService {
     );
     return result;
   }
+  async getAllActiveSessions(userId: string) {
+    return await this.sessionQueryRepository.getAllActiveDevices(userId);
+  }
   async deleteActiveSessionById(
     deviceId: string,
     userId: string,
   ): Promise<void> {
-    const isSessionsExists =
-      await this.sessionQueryRepository.getActiveDeviceById(deviceId);
-    if (!isSessionsExists) {
-      throw NotFoundDomainException.create('session not found');
+    const sessionExists = await this.sessionQueryRepository.getActiveDeviceById(deviceId);
+    if (!sessionExists) {
+      throw NotFoundDomainException.create(
+        `Device with id ${deviceId} not found`,
+      );
     }
+    
     const isUserHasSuchDevice =
       await this.sessionRepository.checkIfUserHasSuchDevice(userId, deviceId);
     if (!isUserHasSuchDevice) {
@@ -47,6 +52,7 @@ export class SessionService {
         'user has no such device, forbidden',
       );
     }
+    
     const result = await this.sessionRepository.deleteActiveSessionByDeviceId(
       userId,
       deviceId,
@@ -61,14 +67,16 @@ export class SessionService {
     const session = this.sessionModel.createInstance(newSession);
     await this.sessionRepository.createSession(session);
   }
-  async updateSession(
-    device_id: string,
-    updates: UpdateSessionDomainDto,
-  ): Promise<boolean> {
-    const result = await this.sessionRepository.updateSession(
-      device_id,
-      updates,
-    );
+  async updateSession(deviceId: string, dto: UpdateSessionDomainDto) {
+    const result = await this.sessionRepository.updateSession(deviceId, {
+      iat: dto.iat,
+      exp: dto.exp,
+    });
+    
+    if (!result) {
+      throw NotFoundDomainException.create('Session not found');
+    }
+    
     return result;
   }
   async generateDeviceId(): Promise<string> {

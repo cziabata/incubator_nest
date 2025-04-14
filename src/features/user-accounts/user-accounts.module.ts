@@ -63,6 +63,7 @@ import { SessionRepository } from './infrastructure/session.repository';
     SessionService,
     SessionRepository,
     SessionQueryRepository,
+    BlacklistedRefreshTokenRepository,
   ],
 })
 export class UserAccountsModule {}
