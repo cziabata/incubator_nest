@@ -121,7 +121,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(204)
   async logout(
-    @Req() req,
+    @Req() req: any,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     if (!req.user || !req.user.id || !req.user.session?.deviceId) {
@@ -145,7 +145,8 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh-token')
-  async refreshToken(@Req() req, @Res({ passthrough: true }) res: Response) {
+  @HttpCode(200)
+  async refreshToken(@Req() req: any, @Res({ passthrough: true }) res: Response) {
     if (!req.user || !req.user.id || !req.user.session?.deviceId) {
       throw new UnauthorizedException('User not authenticated');
     }
