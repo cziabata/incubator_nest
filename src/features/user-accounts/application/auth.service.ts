@@ -61,9 +61,12 @@ export class AuthService {
 
   async login(userId: string, deviceName: string, ip: string) {
     // Check for existing session with same device name
-    const existingSessions = await this.sessionService.getAllActiveSessions(userId);
-    const existingSession = existingSessions.find(session => session.title === deviceName);
-    
+    const existingSessions =
+      await this.sessionService.getAllActiveSessions(userId);
+    const existingSession = existingSessions.find(
+      (session) => session.title === deviceName,
+    );
+
     let deviceId;
     if (existingSession) {
       deviceId = existingSession.deviceId;
@@ -80,10 +83,10 @@ export class AuthService {
     });
 
     const refreshToken = this.jwtService.sign(
-      { 
-        id: userId, 
+      {
+        id: userId,
         deviceId: deviceId,
-        iat: Math.floor(iat.getTime() / 1000)
+        iat: Math.floor(iat.getTime() / 1000),
       },
       {
         secret: 'refresh-token-secret',
@@ -126,8 +129,8 @@ export class AuthService {
 
     // Проверка существования сессии
     const sessions = await this.sessionService.getAllActiveSessions(userId);
-    const session = sessions.find(s => s.deviceId === deviceId);
-    
+    const session = sessions.find((s) => s.deviceId === deviceId);
+
     if (!session) {
       throw UnauthorizedDomainException.create('Session not found');
     }
@@ -144,10 +147,10 @@ export class AuthService {
     );
 
     const refreshToken = this.jwtService.sign(
-      { 
-        id: userId, 
+      {
+        id: userId,
         deviceId: deviceId,
-        iat: Math.floor(iat.getTime() / 1000)
+        iat: Math.floor(iat.getTime() / 1000),
       },
       {
         secret: 'refresh-token-secret',

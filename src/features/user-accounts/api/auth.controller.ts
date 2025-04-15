@@ -146,7 +146,10 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh-token')
   @HttpCode(200)
-  async refreshToken(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async refreshToken(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     if (!req.user || !req.user.id || !req.user.session?.deviceId) {
       throw new UnauthorizedException('User not authenticated');
     }
