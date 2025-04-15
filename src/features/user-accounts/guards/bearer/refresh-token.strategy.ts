@@ -25,21 +25,26 @@ export class RefreshTokenStrategy extends PassportStrategy(
           if (request.cookies && request.cookies.refreshToken) {
             return request.cookies.refreshToken;
           }
-          
+
           // Fallback: manually parse cookie header if cookie-parser didn't work
           const cookieHeader = request.headers.cookie;
           if (cookieHeader) {
-            const cookies: Record<string, string> = cookieHeader.split(';').reduce((acc, cookie) => {
-              const [key, value] = cookie.trim().split('=');
-              acc[key] = value;
-              return acc;
-            }, {} as Record<string, string>);
-            
+            const cookies: Record<string, string> = cookieHeader
+              .split(';')
+              .reduce(
+                (acc, cookie) => {
+                  const [key, value] = cookie.trim().split('=');
+                  acc[key] = value;
+                  return acc;
+                },
+                {} as Record<string, string>,
+              );
+
             if (cookies.refreshToken) {
               return cookies.refreshToken;
             }
           }
-          
+
           return null;
         },
       ]),
@@ -69,7 +74,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
       }
 
       // Проверяем, находится ли токен в черном списке
-      const isBlacklisted = await this.refreshTokenRepository.doesExist(refreshToken);
+      const isBlacklisted =
+        await this.refreshTokenRepository.doesExist(refreshToken);
       if (isBlacklisted) {
         throw new UnauthorizedException('Token is blacklisted');
       }
@@ -81,7 +87,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
       }
 
       // Проверяем наличие активных сессий
-      const allSessions = await this.sessionsQueryRepository.getAllActiveDevices(id);
+      const allSessions =
+        await this.sessionsQueryRepository.getAllActiveDevices(id);
       if (allSessions.length === 0) {
         throw new UnauthorizedException('No active sessions found');
       }
@@ -90,7 +97,9 @@ export class RefreshTokenStrategy extends PassportStrategy(
       return {
         id,
         session: {
-          iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : new Date().toISOString(),
+          iat: payload.iat
+            ? new Date(payload.iat * 1000).toISOString()
+            : new Date().toISOString(),
           deviceId: deviceId || 'unknown',
         },
       };
