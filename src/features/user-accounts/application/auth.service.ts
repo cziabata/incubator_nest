@@ -236,7 +236,7 @@ export class AuthService {
       expirationDate,
     });
 
-    await this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
+    this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
     await this.usersRepository.save(user);
   }
 
@@ -258,7 +258,7 @@ export class AuthService {
     user.confirmationCode = confirmationCode;
     user.expirationDate = expirationDate;
 
-    await this.emailService.sendConfirmationEmail(email, confirmationCode);
+    this.emailService.sendConfirmationEmail(email, confirmationCode);
     await this.usersRepository.save(user);
   }
 
