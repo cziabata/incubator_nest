@@ -1,5 +1,5 @@
 import { Controller, Delete, HttpCode, HttpStatus } from '@nestjs/common';
-import { User, UserModelType } from '../user-accounts/domain/user.entity';
+// import { User, UserModelType } from '../user-accounts/domain/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Post,
@@ -19,8 +19,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 @Controller('testing')
 export class TestingController {
   constructor(
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
+    // @InjectModel(User.name)
+    // private UserModel: UserModelType,
     @InjectModel(Post.name)
     private PostModel: PostModelType,
     @InjectModel(Blog.name)
@@ -33,12 +33,13 @@ export class TestingController {
   @Delete('all-data')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAll() {
-    await this.UserModel.deleteMany();
+    // await this.UserModel.deleteMany();
     await this.PostModel.deleteMany();
     await this.BlogModel.deleteMany();
     await this.CommentModel.deleteMany();
     
     // Очистка таблиц через SQL
+    await this.dataSource.query(`TRUNCATE TABLE users`);
     await this.dataSource.query(`TRUNCATE TABLE refresh_tokens_black_list`);
     await this.dataSource.query(`TRUNCATE TABLE sessions`);
   }
