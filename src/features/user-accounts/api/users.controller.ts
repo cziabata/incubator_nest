@@ -21,7 +21,7 @@ import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
 
-@Controller('users')
+@Controller('sa/users')
 export class UsersController {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
