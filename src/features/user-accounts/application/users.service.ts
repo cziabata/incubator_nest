@@ -39,10 +39,6 @@ export class UsersService {
   }
 
   async deleteUser(id: string) {
-    const user = await this.usersRepository.findOrNotFoundFail(id);
-    console.log('user', user);
-    user.makeDeleted();
-
-    await this.usersRepository.save(user);
+    await this.usersRepository.deleteUserById(id);
   }
 }

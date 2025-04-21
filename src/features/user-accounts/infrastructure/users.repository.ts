@@ -2,10 +2,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
+import { DataSource } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @Injectable()
 export class UsersRepository {
-  constructor(@InjectModel(User.name) private UserModel: UserModelType) {}
+  constructor(
+    @InjectModel(User.name) private UserModel: UserModelType,
+    @InjectDataSource() private dataSource: DataSource,
+  ) {}
 
   async findById(id: string): Promise<UserDocument | null> {
     return this.UserModel.findOne({
@@ -56,5 +61,19 @@ export class UsersRepository {
 
   async emailIsExist(email: string): Promise<boolean> {
     return !!(await this.UserModel.countDocuments({ email }));
+  }
+
+  async deleteUserById(id: string): Promise<void> {
+    const sqlQuery = `
+      UPDATE users 
+      SET deleted_at = CURRENT_DATE
+      WHERE id = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [id]);
+    
+    if (result[1] === 0) {
+      throw NotFoundDomainException.create('user not found');
+    }
   }
 }

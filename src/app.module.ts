@@ -12,6 +12,7 @@ import { GLOBAL_PREFIX } from './setup/global-prefix.setup';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -31,6 +32,17 @@ import { CqrsModule } from '@nestjs/cqrs';
           limit: 100, // Максимум 100 запросов за это время
         },
       ],
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.POSTGE_DB_HOST || '',
+      port: 5432,
+      username: process.env.POSTGE_DB_USERNAME || '',
+      password: process.env.POSTGE_DB_PASSWORD || '',
+      database: process.env.POSTGE_DB_NAME || '',
+      ssl: true,
+      // autoLoadEntities: false,
+      // synchronize: false,
     }),
     CqrsModule.forRoot(),
     TestingModule,
