@@ -3,14 +3,12 @@ import { UsersRepository } from '../infrastructure/users.repository';
 import { JwtService } from '@nestjs/jwt';
 import { UserContextDto } from '../guards/dto/user-context.dto';
 import { CryptoService } from './crypto.service';
-import { User, UserModelType } from '../domain/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import {
   BadRequestDomainException,
   UnauthorizedDomainException,
 } from 'src/core/exceptions/domain-exceptions';
 import { EmailService } from 'src/features/notifications/email.service';
-import { InjectModel } from '@nestjs/mongoose';
 import { SessionService } from './session.service';
 import { addSeconds } from 'date-fns';
 import { CreateSessionDto } from '../dto/create-session.dto';
@@ -25,8 +23,6 @@ const REFRESH_EXPIRES_IN = '20s'; // "20s" || || '60m'
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
     private cryptoService: CryptoService,
@@ -188,22 +184,10 @@ export class AuthService {
   }
 
   async createUser(dto: CreateUserDto): Promise<void> {
-    // if (await this.usersRepository.emailIsExist(dto.email)) {
-    //   throw BadRequestDomainException.create(
-    //     `Email ${dto.email} is already taken`,
-    //   );
-    // }
-
-    // if (await this.usersRepository.loginIsExist(dto.login)) {
-    //   throw BadRequestDomainException.create(
-    //     `Login ${dto.login} is already taken`,
-    //   );
-    // }
-
     if (await this.usersRepository.emailIsExist(dto.email)) {
       throw BadRequestDomainException.create(
         `Email ${dto.email} is already taken`,
-        'email', // указание поля, которое вызвало ошибку
+        'email',
       );
     }
     if (await this.usersRepository.loginIsExist(dto.login)) {
@@ -219,16 +203,17 @@ export class AuthService {
     const confirmationCode = crypto.randomUUID();
     const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
-    const user = this.UserModel.createInstance({
-      email: dto.email,
+    // Создаем пользователя с помощью SQL
+    await this.usersRepository.createUserWithConfirmation({
       login: dto.login,
+      email: dto.email,
       passwordHash: passwordHash,
       confirmationCode,
       expirationDate,
+      isEmailConfirmed: false
     });
 
     this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
-    await this.usersRepository.save(user);
   }
 
   async resendConfirmationCode(email: string) {
@@ -246,11 +231,14 @@ export class AuthService {
     const confirmationCode = crypto.randomUUID();
     const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
-    user.confirmationCode = confirmationCode;
-    user.expirationDate = expirationDate;
+    // Обновляем код подтверждения
+    await this.usersRepository.updateConfirmationCode(
+      user.id,
+      confirmationCode,
+      expirationDate
+    );
 
     this.emailService.sendConfirmationEmail(email, confirmationCode);
-    await this.usersRepository.save(user);
   }
 
   async confirmRegistration(code: string) {
@@ -273,8 +261,9 @@ export class AuthService {
         'code',
       );
     }
-    user.isEmailConfirmed = true;
-    await this.usersRepository.save(user);
+    
+    // Подтверждаем email
+    await this.usersRepository.confirmEmail(user.id);
   }
 
   async passwordRecovery(email: string) {
@@ -282,15 +271,21 @@ export class AuthService {
     if (!user) {
       throw BadRequestDomainException.create('Email does not exist', 'email');
     }
-    user.confirmationCode = crypto.randomUUID();
-    user.expirationDate = new Date(Date.now() + 75 * 60 * 1000);
-    user.isEmailConfirmed = false;
+    
+    const confirmationCode = crypto.randomUUID();
+    const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
+    
+    // Обновляем код подтверждения и сбрасываем статус подтверждения email
+    await this.usersRepository.updateConfirmationCodeAndResetConfirmation(
+      user.id,
+      confirmationCode,
+      expirationDate
+    );
 
     await this.emailService.sendPasswordRecoveryEmail(
       email,
-      user.confirmationCode,
+      confirmationCode
     );
-    await this.usersRepository.save(user);
   }
 
   async confirmPasswordRecovery(newPassword: string, code: string) {
@@ -314,9 +309,12 @@ export class AuthService {
       );
     }
 
-    user.passwordHash =
-      await this.cryptoService.createPasswordHash(newPassword);
-    user.isEmailConfirmed = true;
-    await this.usersRepository.save(user);
+    const passwordHash = await this.cryptoService.createPasswordHash(newPassword);
+    
+    // Обновляем пароль и подтверждаем email
+    await this.usersRepository.updatePasswordAndConfirmEmail(
+      user.id,
+      passwordHash
+    );
   }
 }

@@ -13,18 +13,37 @@ export class UsersRepository {
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
-  async findById(id: string): Promise<UserDocument | null> {
-    return this.UserModel.findOne({
-      _id: id,
-      deletedAt: null,
-    });
+  async findById(id: string): Promise<any | null> {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        login, 
+        email, 
+        password_hash as "passwordHash", 
+        is_emai_confirmed as "isEmailConfirmed",
+        confirmation_code as "confirmationCode",
+        expiration_date as "expirationDate",
+        created_at as "createdAt",
+        first_name as "firstName",
+        last_name as "lastName"
+      FROM users
+      WHERE id = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [id]);
+    
+    if (!result || result.length === 0) {
+      return null;
+    }
+    
+    return result[0];
   }
 
   async save(user: UserDocument) {
     await user.save();
   }
 
-  async findOrNotFoundFail(id: string): Promise<UserDocument> {
+  async findOrNotFoundFail(id: string): Promise<any> {
     const user = await this.findById(id);
 
     if (!user) {
@@ -34,34 +53,263 @@ export class UsersRepository {
     return user;
   }
 
-  findByLogin(login: string): Promise<UserDocument | null> {
-    return this.UserModel.findOne({ login });
+  async findByLogin(login: string): Promise<any | null> {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        login, 
+        email, 
+        password_hash as "passwordHash", 
+        is_emai_confirmed as "isEmailConfirmed",
+        confirmation_code as "confirmationCode",
+        expiration_date as "expirationDate",
+        created_at as "createdAt",
+        first_name as "firstName",
+        last_name as "lastName"
+      FROM users
+      WHERE login = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [login]);
+    
+    if (!result || result.length === 0) {
+      return null;
+    }
+    
+    return result[0];
   }
 
-  findByEmail(email: string): Promise<UserDocument | null> {
-    return this.UserModel.findOne({ email });
+  async findByEmail(email: string): Promise<any | null> {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        login, 
+        email, 
+        password_hash as "passwordHash", 
+        is_emai_confirmed as "isEmailConfirmed",
+        confirmation_code as "confirmationCode",
+        expiration_date as "expirationDate",
+        created_at as "createdAt",
+        first_name as "firstName",
+        last_name as "lastName"
+      FROM users
+      WHERE email = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [email]);
+    
+    if (!result || result.length === 0) {
+      return null;
+    }
+    
+    return result[0];
   }
 
-  async findByLoginOrEmail(loginOrEmail: string): Promise<User | null> {
-    return this.UserModel.findOne({
-      $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
-    }).exec();
+  async findByLoginOrEmail(loginOrEmail: string): Promise<any | null> {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        login, 
+        email, 
+        password_hash as "passwordHash", 
+        is_emai_confirmed as "isEmailConfirmed",
+        confirmation_code as "confirmationCode",
+        expiration_date as "expirationDate",
+        created_at as "createdAt",
+        first_name as "firstName",
+        last_name as "lastName"
+      FROM users
+      WHERE (login = $1 OR email = $1) AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [loginOrEmail]);
+    
+    if (!result || result.length === 0) {
+      return null;
+    }
+    
+    return result[0];
   }
 
-  findByConfirmationCode(
-    confirmationCode: string,
-  ): Promise<UserDocument | null> {
-    return this.UserModel.findOne({
-      confirmationCode,
-    });
+  async findByConfirmationCode(confirmationCode: string): Promise<any | null> {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        login, 
+        email, 
+        password_hash as "passwordHash", 
+        is_emai_confirmed as "isEmailConfirmed",
+        confirmation_code as "confirmationCode",
+        expiration_date as "expirationDate",
+        created_at as "createdAt",
+        first_name as "firstName",
+        last_name as "lastName"
+      FROM users
+      WHERE confirmation_code = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [confirmationCode]);
+    
+    if (!result || result.length === 0) {
+      return null;
+    }
+    
+    return result[0];
   }
 
   async loginIsExist(login: string): Promise<boolean> {
-    return !!(await this.UserModel.countDocuments({ login }));
+    const sqlQuery = `
+      SELECT COUNT(*) as count
+      FROM users
+      WHERE login = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [login]);
+    
+    return parseInt(result[0].count) > 0;
   }
 
   async emailIsExist(email: string): Promise<boolean> {
-    return !!(await this.UserModel.countDocuments({ email }));
+    const sqlQuery = `
+      SELECT COUNT(*) as count
+      FROM users
+      WHERE email = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [email]);
+    
+    return parseInt(result[0].count) > 0;
+  }
+
+  async createUserWithConfirmation(dto: {
+    login: string;
+    email: string;
+    passwordHash: string;
+    confirmationCode: string;
+    expirationDate: Date;
+    isEmailConfirmed: boolean;
+    firstName?: string;
+    lastName?: string;
+  }): Promise<string> {
+    const sqlQuery = `
+      INSERT INTO users (
+        login, 
+        email, 
+        password_hash, 
+        confirmation_code,
+        expiration_date,
+        is_emai_confirmed,
+        first_name, 
+        last_name,
+        created_at, 
+        updated_at
+      ) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_DATE, CURRENT_DATE)
+      RETURNING id
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [
+      dto.login,
+      dto.email,
+      dto.passwordHash,
+      dto.confirmationCode,
+      dto.expirationDate,
+      dto.isEmailConfirmed,
+      dto.firstName || null,
+      dto.lastName || null
+    ]);
+    
+    return result[0].id;
+  }
+
+  async updateConfirmationCode(
+    userId: string, 
+    confirmationCode: string, 
+    expirationDate: Date
+  ): Promise<void> {
+    const sqlQuery = `
+      UPDATE users 
+      SET 
+        confirmation_code = $1, 
+        expiration_date = $2,
+        updated_at = CURRENT_DATE
+      WHERE id = $3 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [
+      confirmationCode,
+      expirationDate,
+      userId
+    ]);
+    
+    if (result[1] === 0) {
+      throw NotFoundDomainException.create('user not found');
+    }
+  }
+  
+  async updateConfirmationCodeAndResetConfirmation(
+    userId: string, 
+    confirmationCode: string, 
+    expirationDate: Date
+  ): Promise<void> {
+    const sqlQuery = `
+      UPDATE users 
+      SET 
+        confirmation_code = $1, 
+        expiration_date = $2,
+        is_emai_confirmed = false,
+        updated_at = CURRENT_DATE
+      WHERE id = $3 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [
+      confirmationCode,
+      expirationDate,
+      userId
+    ]);
+    
+    if (result[1] === 0) {
+      throw NotFoundDomainException.create('user not found');
+    }
+  }
+  
+  async confirmEmail(userId: string): Promise<void> {
+    const sqlQuery = `
+      UPDATE users 
+      SET 
+        is_emai_confirmed = true,
+        updated_at = CURRENT_DATE
+      WHERE id = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [userId]);
+    
+    if (result[1] === 0) {
+      throw NotFoundDomainException.create('user not found');
+    }
+  }
+  
+  async updatePasswordAndConfirmEmail(
+    userId: string,
+    passwordHash: string
+  ): Promise<void> {
+    const sqlQuery = `
+      UPDATE users 
+      SET 
+        password_hash = $1,
+        is_emai_confirmed = true,
+        updated_at = CURRENT_DATE
+      WHERE id = $2 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [
+      passwordHash,
+      userId
+    ]);
+    
+    if (result[1] === 0) {
+      throw NotFoundDomainException.create('user not found');
+    }
   }
 
   async createUser(dto: {
