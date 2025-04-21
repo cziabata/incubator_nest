@@ -18,10 +18,6 @@ import { JwtStrategy } from './guards/bearer/jwt.strategy';
 import { RefreshTokenStrategy } from './guards/bearer/refresh-token.strategy';
 import { Session, SessionSchema } from './domain/session.entity';
 import { BlacklistedRefreshTokenRepository } from './infrastructure/blacklisted-refresh-token.repository';
-import {
-  BlacklistedToken,
-  BlacklistedTokenSchema,
-} from './domain/blacklisted-token.entity';
 import { SessionService } from './application/session.service';
 import { SessionRepository } from './infrastructure/session.repository';
 
@@ -30,7 +26,6 @@ import { SessionRepository } from './infrastructure/session.repository';
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Session.name, schema: SessionSchema },
-      { name: BlacklistedToken.name, schema: BlacklistedTokenSchema },
     ]),
     EmailModule,
     JwtModule.register({

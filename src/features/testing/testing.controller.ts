@@ -17,7 +17,8 @@ import {
   Session,
   SessionModelType,
 } from '../user-accounts/domain/session.entity';
-import { BlacklistedToken, BlacklistedTokenModelType } from '../user-accounts/domain/blacklisted-token.entity';
+import { DataSource } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @Controller('testing')
 export class TestingController {
@@ -32,8 +33,7 @@ export class TestingController {
     private CommentModel: CommentModelType,
     @InjectModel(Session.name)
     private SessionModel: SessionModelType,
-    @InjectModel(BlacklistedToken.name)
-    private BlacklistedTokenModel: BlacklistedTokenModelType,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   @Delete('all-data')
@@ -44,6 +44,8 @@ export class TestingController {
     await this.BlogModel.deleteMany();
     await this.CommentModel.deleteMany();
     await this.SessionModel.deleteMany();
-    await this.BlacklistedTokenModel.deleteMany();
+    
+    // Очистка таблицы refresh_tokens_black_list
+    await this.dataSource.query(`TRUNCATE TABLE refresh_tokens_black_list`);
   }
 }

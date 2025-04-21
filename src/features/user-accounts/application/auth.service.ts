@@ -16,10 +16,6 @@ import { addSeconds } from 'date-fns';
 import { CreateSessionDto } from '../dto/create-session.dto';
 import { UpdateSessionDomainDto } from '../domain/dto/update-session.domain.dto';
 import { BlacklistedRefreshTokenRepository } from '../infrastructure/blacklisted-refresh-token.repository';
-import {
-  BlacklistedToken,
-  BlacklistedTokenModelType,
-} from '../domain/blacklisted-token.entity';
 
 // TO DO
 const REFRESH_TOKEN_SECONDS = 20; // 20 || 1800
@@ -36,8 +32,6 @@ export class AuthService {
     private cryptoService: CryptoService,
     private sessionService: SessionService,
     private emailService: EmailService,
-    @InjectModel(BlacklistedToken.name)
-    private BlacklistedTokenModel: BlacklistedTokenModelType,
     private readonly refreshTokenRepository: BlacklistedRefreshTokenRepository,
   ) {}
 
@@ -122,10 +116,7 @@ export class AuthService {
     }
 
     // Добавление токена в черный список
-    const oldRefreshTokenInstance = this.BlacklistedTokenModel.createInstance({
-      token: oldRefreshToken,
-    });
-    await this.refreshTokenRepository.save(oldRefreshTokenInstance);
+    await this.refreshTokenRepository.save(oldRefreshToken);
 
     // Проверка существования сессии
     const sessions = await this.sessionService.getAllActiveSessions(userId);
