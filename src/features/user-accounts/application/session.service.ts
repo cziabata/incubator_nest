@@ -3,9 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { SessionRepository } from '../infrastructure/session.repository';
 import { SessionQueryRepository } from '../infrastructure/query/session.query-repository';
 import { CreateSessionDto } from '../dto/create-session.dto';
-import { SessionModelType, Session } from '../domain/session.entity';
 import { UpdateSessionDomainDto } from '../domain/dto/update-session.domain.dto';
-import { InjectModel } from '@nestjs/mongoose';
 import {
   BadRequestDomainException,
   ForbiddenDomainException,
@@ -15,8 +13,6 @@ import {
 @Injectable()
 export class SessionService {
   constructor(
-    @InjectModel(Session.name)
-    private sessionModel: SessionModelType,
     private sessionRepository: SessionRepository,
     private sessionQueryRepository: SessionQueryRepository,
   ) {}
@@ -31,9 +27,11 @@ export class SessionService {
     );
     return result;
   }
+  
   async getAllActiveSessions(userId: string) {
     return await this.sessionQueryRepository.getAllActiveDevices(userId);
   }
+  
   async deleteActiveSessionById(
     deviceId: string,
     userId: string,
@@ -63,10 +61,11 @@ export class SessionService {
       );
     }
   }
+  
   async createSession(newSession: CreateSessionDto) {
-    const session = this.sessionModel.createInstance(newSession);
-    await this.sessionRepository.createSession(session);
+    await this.sessionRepository.createSession(newSession);
   }
+  
   async updateSession(deviceId: string, dto: UpdateSessionDomainDto) {
     const result = await this.sessionRepository.updateSession(deviceId, {
       iat: dto.iat,
@@ -79,6 +78,7 @@ export class SessionService {
     
     return result;
   }
+  
   async generateDeviceId(): Promise<string> {
     return uuidv4();
   }

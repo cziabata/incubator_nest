@@ -13,10 +13,6 @@ import {
   Comment,
   CommentModelType,
 } from '../bloggers-platform/comments/domain/comment.entity';
-import {
-  Session,
-  SessionModelType,
-} from '../user-accounts/domain/session.entity';
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 
@@ -31,8 +27,6 @@ export class TestingController {
     private BlogModel: BlogModelType,
     @InjectModel(Comment.name)
     private CommentModel: CommentModelType,
-    @InjectModel(Session.name)
-    private SessionModel: SessionModelType,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
@@ -43,9 +37,9 @@ export class TestingController {
     await this.PostModel.deleteMany();
     await this.BlogModel.deleteMany();
     await this.CommentModel.deleteMany();
-    await this.SessionModel.deleteMany();
     
-    // Очистка таблицы refresh_tokens_black_list
+    // Очистка таблиц через SQL
     await this.dataSource.query(`TRUNCATE TABLE refresh_tokens_black_list`);
+    await this.dataSource.query(`TRUNCATE TABLE sessions`);
   }
 }

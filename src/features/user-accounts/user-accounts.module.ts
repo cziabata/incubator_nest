@@ -16,7 +16,6 @@ import { EmailModule } from '../notifications/notifications.module';
 import { LocalStrategy } from './guards/local/local.strategy';
 import { JwtStrategy } from './guards/bearer/jwt.strategy';
 import { RefreshTokenStrategy } from './guards/bearer/refresh-token.strategy';
-import { Session, SessionSchema } from './domain/session.entity';
 import { BlacklistedRefreshTokenRepository } from './infrastructure/blacklisted-refresh-token.repository';
 import { SessionService } from './application/session.service';
 import { SessionRepository } from './infrastructure/session.repository';
@@ -25,7 +24,6 @@ import { SessionRepository } from './infrastructure/session.repository';
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
-      { name: Session.name, schema: SessionSchema },
     ]),
     EmailModule,
     JwtModule.register({

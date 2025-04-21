@@ -1,41 +1,90 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Session, SessionModelType } from '../../domain/session.entity';
+// import { InjectModel } from '@nestjs/mongoose';
+// import { Session, SessionModelType } from '../../domain/session.entity';
 import { SessionViewDto } from '../../api/view-dto/session.view-dto';
+import { DataSource } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @Injectable()
 export class SessionQueryRepository {
   constructor(
-    @InjectModel(Session.name)
-    private SessionModel: SessionModelType,
+    // @InjectModel(Session.name)
+    // private SessionModel: SessionModelType,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async getAllActiveDevices(userId: string): Promise<SessionViewDto[]> {
-    const sessions = await this.SessionModel.find({
-      user_id: userId,
-    });
-    const activeSessions = sessions.filter(
-      (session) => session.exp.getTime() > Date.now(),
-    );
-    return activeSessions.map((s) => SessionViewDto.mapToView(s));
+    const sqlQuery = `
+      SELECT 
+        id, 
+        device_id as "deviceId", 
+        iat as "lastActiveDate", 
+        device_name as "title", 
+        ip
+      FROM sessions
+      WHERE user_id = $1 AND exp > NOW()
+    `;
+    
+    const sessions = await this.dataSource.query(sqlQuery, [userId]);
+    
+    return sessions.map((session) => ({
+      deviceId: session.deviceId,
+      ip: session.ip,
+      lastActiveDate: session.lastActiveDate,
+      title: session.title
+    }));
   }
 
   async getActiveDeviceById(deviceId: string): Promise<SessionViewDto | null> {
-    const session = await this.SessionModel.findOne({ device_id: deviceId });
-    if (!session) {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        device_id as "deviceId", 
+        iat as "lastActiveDate", 
+        device_name as "title", 
+        ip
+      FROM sessions
+      WHERE device_id = $1 AND exp > NOW()
+    `;
+    
+    const sessions = await this.dataSource.query(sqlQuery, [deviceId]);
+    
+    if (!sessions || sessions.length === 0) {
       return null;
     }
-    return SessionViewDto.mapToView(session);
+    
+    const session = sessions[0];
+    return {
+      deviceId: session.deviceId,
+      ip: session.ip,
+      lastActiveDate: session.lastActiveDate,
+      title: session.title
+    };
   }
 
   async getActiveDeviceByIatAndUserId(
     iat: string,
     userId: string,
-  ): Promise<Session | null> {
-    const session = await this.SessionModel.findOne({ iat, user_id: userId });
-    if (!session) {
+  ): Promise<any | null> {
+    const sqlQuery = `
+      SELECT 
+        id, 
+        device_id as "deviceId", 
+        user_id as "userId",
+        iat, 
+        device_name as "deviceName", 
+        ip,
+        exp
+      FROM sessions
+      WHERE iat = $1 AND user_id = $2 AND exp > NOW()
+    `;
+    
+    const sessions = await this.dataSource.query(sqlQuery, [iat, userId]);
+    
+    if (!sessions || sessions.length === 0) {
       return null;
     }
-    return session;
+    
+    return sessions[0];
   }
 }
