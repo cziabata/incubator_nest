@@ -1,5 +1,5 @@
-import { User, UserModelType } from '../../domain/user.entity';
-import { InjectModel } from '@nestjs/mongoose';
+// import { User, UserModelType } from '../../domain/user.entity';
+// import { InjectModel } from '@nestjs/mongoose';
 import { UserViewDto } from '../../api/view-dto/users.view-dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 // import { FilterQuery } from 'mongoose';
@@ -11,23 +11,42 @@ import { InjectDataSource } from '@nestjs/typeorm';
 @Injectable()
 export class UsersQueryRepository {
   constructor(
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
+    // @InjectModel(User.name)
+    // private UserModel: UserModelType,
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
 
   async getByIdOrNotFoundFail(id: string): Promise<UserViewDto> {
-    const user = await this.UserModel.findOne({
-      _id: id,
-      deletedAt: null,
-    });
-
-    if (!user) {
+    const sqlQuery = `
+      SELECT
+        id,
+        login,
+        email,
+        created_at as "createdAt",
+        first_name as "firstName",
+        last_name as "lastName"
+      FROM users
+      WHERE id = $1 AND deleted_at IS NULL
+    `;
+    
+    const result = await this.dataSource.query(sqlQuery, [id]);
+    
+    if (!result || result.length === 0) {
       throw new NotFoundException('user not found');
     }
-
-    return UserViewDto.mapToView(user);
+    
+    const user = result[0];
+    const dto = new UserViewDto();
+    
+    dto.id = user.id.toString();
+    dto.login = user.login;
+    dto.email = user.email;
+    dto.createdAt = user.createdAt;
+    dto.firstName = user.firstName;
+    dto.lastName = user.lastName;
+    
+    return dto;
   }
 
   async getAll(

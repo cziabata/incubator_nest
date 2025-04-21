@@ -19,23 +19,15 @@ export class UsersService {
       dto.password,
     );
 
-    const user = this.UserModel.createInstance({
-      email: dto.email,
+    return this.usersRepository.createUser({
       login: dto.login,
-      passwordHash: passwordHash,
+      email: dto.email,
+      passwordHash: passwordHash
     });
-
-    await this.usersRepository.save(user);
-
-    return user._id.toString();
   }
+
   async updateUser(id: string, dto: UpdateUserDto): Promise<string> {
-    const user = await this.usersRepository.findOrNotFoundFail(id);
-    user.update(dto);
-
-    await this.usersRepository.save(user);
-
-    return user._id.toString();
+    return this.usersRepository.updateUser(id, { email: dto.email });
   }
 
   async deleteUser(id: string) {
