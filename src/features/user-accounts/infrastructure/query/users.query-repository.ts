@@ -43,8 +43,15 @@ export class UsersQueryRepository {
     dto.login = user.login;
     dto.email = user.email;
     dto.createdAt = user.createdAt;
-    dto.firstName = user.firstName;
-    dto.lastName = user.lastName;
+    
+    // Добавляем поля только если они не null
+    if (user.firstName) {
+      dto.firstName = user.firstName;
+    }
+    
+    if (user.lastName) {
+      dto.lastName = user.lastName;
+    }
     
     return dto;
   }
@@ -138,14 +145,24 @@ export class UsersQueryRepository {
     const users = await this.dataSource.query(sqlQuery, params);
 
     // Маппим результаты в DTO
-    const items = users.map((user) => ({
-      id: user.id,
-      login: user.login,
-      email: user.email,
-      createdAt: user.createdAt,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    }));
+    const items = users.map((user) => {
+      const item: any = {
+        id: user.id,
+        login: user.login,
+        email: user.email,
+        createdAt: user.createdAt,
+      };
+      
+      if (user.firstName) {
+        item.firstName = user.firstName;
+      }
+      
+      if (user.lastName) {
+        item.lastName = user.lastName;
+      }
+      
+      return item;
+    });
 
     return PaginatedViewDto.mapToView({
       items,
