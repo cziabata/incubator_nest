@@ -16,9 +16,9 @@ import { UpdateSessionDomainDto } from '../domain/dto/update-session.domain.dto'
 import { BlacklistedRefreshTokenRepository } from '../infrastructure/blacklisted-refresh-token.repository';
 
 // TO DO
-const REFRESH_TOKEN_SECONDS = 1800; // 20 || 1800
-const ACCESS_EXPIRES_IN = '60m'; // "10s" || '60m'
-const REFRESH_EXPIRES_IN = '60m'; // "20s" || || '60m'
+const REFRESH_TOKEN_SECONDS = 20; // 20 || 1800
+const ACCESS_EXPIRES_IN = '10s'; // "10s" || '60m'
+const REFRESH_EXPIRES_IN = '20s'; // "20s" || || '60m'
 
 @Injectable()
 export class AuthService {
