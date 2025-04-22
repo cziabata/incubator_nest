@@ -169,6 +169,7 @@ export class AuthService {
     if (!user) {
       throw UnauthorizedDomainException.create(
         'Invalid login or password or email',
+        'loginOrEmail'
       );
     }
     const isPasswordValid = await this.cryptoService.comparePasswords({
@@ -178,6 +179,7 @@ export class AuthService {
     if (!isPasswordValid) {
       throw UnauthorizedDomainException.create(
         'Invalid login or password or email',
+        'loginOrEmail'
       );
     }
     return await this.login(user.id, deviceName, ip);
