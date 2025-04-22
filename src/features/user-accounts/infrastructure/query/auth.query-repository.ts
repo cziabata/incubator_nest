@@ -16,9 +16,7 @@ export class AuthQueryRepository {
       SELECT 
         id as "userId", 
         login, 
-        email,
-        first_name as "firstName",
-        last_name as "lastName"
+        email
       FROM users
       WHERE id = $1 AND deleted_at IS NULL
     `;
@@ -33,11 +31,9 @@ export class AuthQueryRepository {
     const user = result[0];
     
     return {
-      userId: user.userId,
+      userId: user.userId.toString(),
       login: user.login,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName
+      email: user.email
     };
   }
 }

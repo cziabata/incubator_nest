@@ -21,11 +21,10 @@ export class UserViewDto {
   }
 }
 
-export class MeViewDto extends OmitType(UserViewDto, [
-  'createdAt',
-  'id',
-] as const) {
+export class MeViewDto {
   userId: string;
+  login: string;
+  email: string;
 
   static mapToView(user: UserDocument): MeViewDto {
     const dto = new MeViewDto();
