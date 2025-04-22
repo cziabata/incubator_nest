@@ -147,7 +147,7 @@ export class UsersQueryRepository {
     // Маппим результаты в DTO
     const items = users.map((user) => {
       const item: any = {
-        id: user.id,
+        id: user.id.toString(),
         login: user.login,
         email: user.email,
         createdAt: user.createdAt,
