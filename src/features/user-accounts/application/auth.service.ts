@@ -215,10 +215,10 @@ export class AuthService {
       isEmailConfirmed: false
     });
 
-    this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
+    await this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
   }
 
-  async resendConfirmationCode(email: string) {
+  async resendConfirmationCode(email: string): Promise<void> {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) {
       throw BadRequestDomainException.create('Email does not exist', 'email');
@@ -240,10 +240,10 @@ export class AuthService {
       expirationDate
     );
 
-    this.emailService.sendConfirmationEmail(email, confirmationCode);
+    await this.emailService.sendConfirmationEmail(email, confirmationCode);
   }
 
-  async confirmRegistration(code: string) {
+  async confirmRegistration(code: string): Promise<void> {
     const user = await this.usersRepository.findByConfirmationCode(code);
     if (!user) {
       throw BadRequestDomainException.create('Code does not exist', 'code');
@@ -268,7 +268,7 @@ export class AuthService {
     await this.usersRepository.confirmEmail(user.id);
   }
 
-  async passwordRecovery(email: string) {
+  async passwordRecovery(email: string): Promise<void> {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) {
       throw BadRequestDomainException.create('Email does not exist', 'email');
@@ -290,7 +290,7 @@ export class AuthService {
     );
   }
 
-  async confirmPasswordRecovery(newPassword: string, code: string) {
+  async confirmPasswordRecovery(newPassword: string, code: string): Promise<void> {
     const user = await this.usersRepository.findByConfirmationCode(code);
     if (!user) {
       throw BadRequestDomainException.create('Code does not exist', 'code');
