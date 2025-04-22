@@ -206,7 +206,7 @@ export class AuthService {
     const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
     // Создаем пользователя с помощью SQL
-    await this.usersRepository.createUserWithConfirmation({
+    this.usersRepository.createUserWithConfirmation({
       login: dto.login,
       email: dto.email,
       passwordHash: passwordHash,
@@ -245,9 +245,9 @@ export class AuthService {
 
   async confirmRegistration(code: string): Promise<void> {
     const user = await this.usersRepository.findByConfirmationCode(code);
-    // if (!user) {
-    //   throw BadRequestDomainException.create('Code does not exist', 'code');
-    // }
+    if (!user) {
+      throw BadRequestDomainException.create('Code does not exist', 'code');
+    }
     // if (user.isEmailConfirmed) {
     //   throw BadRequestDomainException.create('Email already confirmed', 'code');
     // }
