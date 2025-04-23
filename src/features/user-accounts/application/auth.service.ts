@@ -186,18 +186,18 @@ export class AuthService {
   }
 
   async createUser(dto: CreateUserDto): Promise<void> {
-    // if (await this.usersRepository.emailIsExist(dto.email)) {
-    //   throw BadRequestDomainException.create(
-    //     `Email ${dto.email} is already taken`,
-    //     'email',
-    //   );
-    // }
-    // if (await this.usersRepository.loginIsExist(dto.login)) {
-    //   throw BadRequestDomainException.create(
-    //     `Login ${dto.login} is already taken`,
-    //     'login',
-    //   );
-    // }
+    if (await this.usersRepository.emailIsExist(dto.email)) {
+      throw BadRequestDomainException.create(
+        `Email ${dto.email} is already taken`,
+        'email',
+      );
+    }
+    if (await this.usersRepository.loginIsExist(dto.login)) {
+      throw BadRequestDomainException.create(
+        `Login ${dto.login} is already taken`,
+        'login',
+      );
+    }
 
     const passwordHash = await this.cryptoService.createPasswordHash(
       dto.password,
@@ -215,7 +215,7 @@ export class AuthService {
       isEmailConfirmed: false
     });
 
-    this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
+    await this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
   }
 
   async resendConfirmationCode(email: string): Promise<void> {
@@ -240,7 +240,7 @@ export class AuthService {
       expirationDate
     );
 
-    this.emailService.sendConfirmationEmail(email, confirmationCode);
+    await this.emailService.sendConfirmationEmail(email, confirmationCode);
   }
 
   async confirmRegistration(code: string): Promise<void> {
@@ -248,24 +248,24 @@ export class AuthService {
     if (!user) {
       throw BadRequestDomainException.create('Code does not exist', 'code');
     }
-    // if (user.isEmailConfirmed) {
-    //   throw BadRequestDomainException.create('Email already confirmed', 'code');
-    // }
-    // if (!user.expirationDate || new Date() > user.expirationDate) {
-    //   throw BadRequestDomainException.create(
-    //     'Confirmation code expired',
-    //     'code',
-    //   );
-    // }
-    // if (user.confirmationCode !== code) {
-    //   throw BadRequestDomainException.create(
-    //     'Invalid confirmation code',
-    //     'code',
-    //   );
-    // }
+    if (user.isEmailConfirmed) {
+      throw BadRequestDomainException.create('Email already confirmed', 'code');
+    }
+    if (!user.expirationDate || new Date() > user.expirationDate) {
+      throw BadRequestDomainException.create(
+        'Confirmation code expired',
+        'code',
+      );
+    }
+    if (user.confirmationCode !== code) {
+      throw BadRequestDomainException.create(
+        'Invalid confirmation code',
+        'code',
+      );
+    }
     
     // Подтверждаем email
-    this.usersRepository.confirmEmail(user.id);
+    await this.usersRepository.confirmEmail(user.id);
   }
 
   async passwordRecovery(email: string): Promise<void> {
