@@ -234,7 +234,7 @@ export class AuthService {
     const expirationDate = new Date(Date.now() + 75 * 60 * 1000);
 
     // Обновляем код подтверждения
-    this.usersRepository.updateConfirmationCode(
+    await this.usersRepository.updateConfirmationCode(
       user.id,
       confirmationCode,
       expirationDate
