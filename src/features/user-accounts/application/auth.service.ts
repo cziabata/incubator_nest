@@ -215,7 +215,7 @@ export class AuthService {
       isEmailConfirmed: false
     });
 
-    this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
+    await this.emailService.sendConfirmationEmail(dto.email, confirmationCode);
   }
 
   async resendConfirmationCode(email: string): Promise<void> {
@@ -240,7 +240,7 @@ export class AuthService {
       expirationDate
     );
 
-    this.emailService.sendConfirmationEmail(email, confirmationCode);
+    await this.emailService.sendConfirmationEmail(email, confirmationCode);
   }
 
   async confirmRegistration(code: string): Promise<void> {
