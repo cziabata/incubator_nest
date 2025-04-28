@@ -1,52 +1,63 @@
 import { NotFoundException } from '@nestjs/common';
 import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType } from '../../domain/blog.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
-import { FilterQuery } from 'mongoose';
 
 export class BlogsQueryRepository {
   constructor(
-    @InjectModel(Blog.name)
-    private BlogModel: BlogModelType,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async getById(id: string): Promise<BlogViewDto> {
-    const blog = await this.BlogModel.findOne({
-      _id: id,
-    });
-
-    if (!blog) {
-      throw new NotFoundException('blog not found');
-    }
-
-    return BlogViewDto.mapToView(blog);
+    const result = await this.dataSource.query(
+      `SELECT * FROM blogs WHERE id = $1`,
+      [id]
+    );
+    if (!result[0]) throw new NotFoundException('blog not found');
+    return BlogViewDto.mapToView(result[0]);
   }
 
   async getAll(
     query: GetBlogsQueryParams,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
-    const filter: FilterQuery<Blog> = {};
+    const filter: string[] = [];
+    const params: (string | number)[] = [];
+    let paramIndex = 1;
 
     if (query.searchNameTerm) {
-      filter.$or = filter.$or || [];
-      filter.$or.push({
-        name: { $regex: query.searchNameTerm, $options: 'i' },
-      });
+      filter.push(`name ILIKE $${paramIndex}`);
+      params.push(`%${query.searchNameTerm}%`);
+      paramIndex++;
     }
 
-    const blogs = await this.BlogModel.find(filter)
-      .sort({ [query.sortBy]: query.sortDirection })
-      .skip(query.calculateSkip())
-      .limit(query.pageSize);
+    const sortByMap: Record<string, string> = {
+      createdAt: 'created_at',
+      name: 'name',
+    };
+    const sortBy = sortByMap[query.sortBy] || 'created_at';
+    const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
+    const where = filter.length ? `WHERE ${filter.join(' AND ')}` : '';
+    const offset = (query.pageNumber - 1) * query.pageSize;
+    const limit = query.pageSize;
 
-    const totalCount = await this.BlogModel.countDocuments(filter);
+    params.push(offset);
+    params.push(limit);
 
-    const items = blogs.map(BlogViewDto.mapToView);
+    const items = await this.dataSource.query(
+      `SELECT * FROM blogs ${where} ${orderBy} OFFSET $${paramIndex} LIMIT $${paramIndex + 1}`,
+      params
+    );
+
+    const countResult = await this.dataSource.query(
+      `SELECT COUNT(*) FROM blogs ${where}`,
+      params.slice(0, paramIndex - 1)
+    );
+    const totalCount = parseInt(countResult[0].count, 10);
 
     return PaginatedViewDto.mapToView({
-      items,
+      items: items.map(BlogViewDto.mapToView),
       totalCount,
       page: query.pageNumber,
       size: query.pageSize,

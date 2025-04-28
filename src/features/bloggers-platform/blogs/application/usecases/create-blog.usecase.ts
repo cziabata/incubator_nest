@@ -15,15 +15,17 @@ export class CreateBlogUsecaseCommand {
 @CommandHandler(CreateBlogUsecaseCommand)
 export class CreateBlogUseCase implements ICommandHandler<CreateBlogUsecaseCommand, string> {
   constructor(
-    @InjectModel(Blog.name)
-    private BlogModel: BlogModelType,
     private blogsRepository: BlogsRepository,
   ) {}
-    async execute(command: CreateBlogUsecaseCommand): Promise<string> {
-    const blog = this.BlogModel.createInstance(command.dto);
-
-    await this.blogsRepository.save(blog);
-
-    return blog.id;
+  async execute(command: CreateBlogUsecaseCommand): Promise<string> {
+    const dto = command.dto;
+    const blog = {
+      name: dto.name,
+      description: dto.description,
+      websiteUrl: dto.websiteUrl,
+      isMembership: false,
+    };
+    const blogId = await this.blogsRepository.save(blog);
+    return blogId;
   }
 }
