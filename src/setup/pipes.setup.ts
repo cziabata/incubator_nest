@@ -2,42 +2,54 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 
 import { ValidationError } from '@nestjs/common';
 import { BadRequestDomainException } from '../core/exceptions/domain-exceptions';
-import { UuidValidationTransformationPipe } from '../core/pipes/object-id-validation-transformation-pipe.service';
 
 type ErrorResponse = { message: string; key: string };
 
-const mapValidationErrorsToResponse = (errors: ValidationError[]): ErrorResponse[] => {
-  const response: ErrorResponse[] = [];
+//функция использует рекурсию для обхода объекта children при вложенных полях при валидации
+//поставьте логи и разберитесь как она работает
+//TODO: tests
+export const errorFormatter = (
+  errors: ValidationError[],
+  errorMessage?: any,
+): ErrorResponse[] => {
+  const errorsForResponse = errorMessage || [];
 
-  errors.forEach((error) => {
+  for (const error of errors) {
     if (!error?.constraints && error?.children?.length) {
-      response.push(...mapValidationErrorsToResponse(error.children));
+      errorFormatter(error.children, errorsForResponse);
     } else if (error?.constraints) {
-      const constrainKeys = Object.keys(error.constraints ?? {});
-      constrainKeys.forEach((key) => {
-        response.push({
-          key: error.property,
-          message: error.constraints && error.constraints[key]
-            ? `${error.constraints[key]}; Received value: ${error?.value}`
-            : 'Unknown validation error',
-        });
-      });
-    }
-  });
+      const constrainKeys = Object.keys(error.constraints);
 
-  return response;
+      for (const key of constrainKeys) {
+        errorsForResponse.push({
+          message: error.constraints[key]
+            ? `${error.constraints[key]}; Received value: ${error?.value}`
+            : '',
+          key: error.property,
+        });
+      }
+    }
+  }
+
+  return errorsForResponse;
 };
 
-export const pipesSetup = (app: INestApplication) => {
+export function pipesSetup(app: INestApplication) {
+  //Глобальный пайп для валидации и трансформации входящих данных.
   app.useGlobalPipes(
     new ValidationPipe({
+      //class-transformer создает экземпляр dto
+      //соответственно применятся значения по-умолчанию
+      //и методы классов dto
       transform: true,
+      //Выдавать первую ошибку для каждого поля
       stopAtFirstError: true,
+      //Для преобразования ошибок класс валидатора в необходимый вид
       exceptionFactory: (errors) => {
-        const errorResponse = mapValidationErrorsToResponse(errors);
-        return BadRequestDomainException.create(JSON.stringify(errorResponse));
+        const formattedErrors = errorFormatter(errors);
+
+        throw new BadRequestDomainException(formattedErrors);
       },
     }),
-    new UuidValidationTransformationPipe(),
   );
-};
+}
