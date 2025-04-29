@@ -114,6 +114,7 @@ export class BlogsSaController {
     @Param('blogId') blogId: string,
     @Param('postId') postId: string,
   ): Promise<void> {
+    await this.blogsRepository.findOrNotFoundFail(blogId);
     await this.postsRepository.deleteById(postId);
   }
 } 
