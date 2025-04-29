@@ -21,7 +21,7 @@ export class BlogsRepository {
   }
 
   async save(blog: {
-    id?: number;
+    id?: string;
     name: string;
     description: string;
     websiteUrl: string;
@@ -33,14 +33,14 @@ export class BlogsRepository {
         `UPDATE blogs SET name = $1, description = $2, website_url = $3, is_membership = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5`,
         [blog.name, blog.description, blog.websiteUrl, blog.isMembership, blog.id]
       );
-      return blog.id.toString();
+      return blog.id;
     } else {
       // insert
       const result = await this.dataSource.query(
         `INSERT INTO blogs (name, description, website_url, is_membership, created_at, updated_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id`,
         [blog.name, blog.description, blog.websiteUrl, blog.isMembership]
       );
-      return result[0].id.toString();
+      return result[0].id;
     }
   }
 

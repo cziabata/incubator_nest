@@ -45,10 +45,13 @@ export class BlogsSaController {
   @HttpCode(204)
   async updateBlog(@Param('id') id: string, @Body() dto: UpdateBlogInputDto): Promise<void> {
     const blog = await this.blogsRepository.findOrNotFoundFail(id);
-    blog.name = dto.name;
-    blog.description = dto.description;
-    blog.websiteUrl = dto.websiteUrl;
-    await this.blogsRepository.save(blog);
+    await this.blogsRepository.save({
+      id: blog.id,
+      name: dto.name,
+      description: dto.description,
+      websiteUrl: dto.websiteUrl,
+      isMembership: blog.isMembership ?? false,
+    });
   }
 
   @Delete(':id')
