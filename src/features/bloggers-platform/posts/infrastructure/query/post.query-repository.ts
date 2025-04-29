@@ -32,6 +32,7 @@ export class PostsQueryRepository {
     const sortByMap: Record<string, string> = {
       createdAt: 'created_at',
       title: 'title',
+      blogName: 'blog_name',
     };
     const sortBy = sortByMap[query.sortBy] || 'created_at';
     const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
