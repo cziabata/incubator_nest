@@ -31,6 +31,8 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
         }
         
         // Обновление статуса лайка
+        /*
         await this.postsRepository.updateLikeStatus(postId, userId, userLogin, likeStatus);
+        */
     }
 } 

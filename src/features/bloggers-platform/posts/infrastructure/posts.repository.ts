@@ -1,155 +1,97 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostDocument, PostModelType } from '../domain/post.entity';
-import { GetPostsQueryParams } from '../api/input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
-import { PostViewDto } from '../api/view-dto/posts.view-dto';
-import { FilterQuery } from 'mongoose';
-import { LikeStatus } from 'src/core/dto/likes';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PostsRepository {
-  constructor(@InjectModel(Post.name) private PostModel: PostModelType) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
-  async findById(id: string): Promise<PostDocument | null> {
-    return this.PostModel.findOne({
-      _id: id,
-    });
+  async findById(id: string): Promise<any | null> {
+    const result = await this.dataSource.query(
+      `SELECT * FROM posts WHERE id = $1`,
+      [id]
+    );
+    return result[0] || null;
   }
 
-  async findOrNotFoundFail(id: string): Promise<PostDocument> {
+  async findOrNotFoundFail(id: string): Promise<any> {
     const post = await this.findById(id);
-
-    if (!post) {
-      //TODO: replace with domain exception
-      throw new NotFoundException('post not found');
-    }
-
+    if (!post) throw new NotFoundException('post not found');
     return post;
   }
 
-  async save(post: PostDocument) {
-    await post.save();
+  async save(post: {
+    id?: string;
+    title: string;
+    shortDescription: string;
+    content: string;
+    blogId: string;
+    blogName: string;
+  }): Promise<string> {
+    if (post.id) {
+      // update
+      await this.dataSource.query(
+        `UPDATE posts SET title = $1, short_description = $2, content = $3, blog_id = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5`,
+        [post.title, post.shortDescription, post.content, post.blogId, post.id]
+      );
+      return post.id.toString();
+    } else {
+      // insert
+      const result = await this.dataSource.query(
+        `INSERT INTO posts (title, short_description, content, blog_id, created_at, updated_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id`,
+        [post.title, post.shortDescription, post.content, post.blogId]
+      );
+      return result[0].id.toString();
+    }
   }
 
   async getPostsByBlogId(
     blogId: string,
-    query: GetPostsQueryParams,
+    query: any,
     userId?: string,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const filter: FilterQuery<Post> = { blogId };
-    const posts = await this.PostModel.find(filter)
-      .sort({ [query.sortBy]: query.sortDirection })
-      .skip(query.calculateSkip())
-      .limit(query.pageSize);
-
-    const totalCount = await this.PostModel.countDocuments(filter);
-
-    const items = posts.map((post) => PostViewDto.mapToView(post, userId));
-
-    return PaginatedViewDto.mapToView({
+  ): Promise<any> {
+    const sortByMap: Record<string, string> = {
+      createdAt: 'created_at',
+      title: 'title',
+    };
+    const sortBy = sortByMap[query.sortBy] || 'created_at';
+    const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
+    const offset = (query.pageNumber - 1) * query.pageSize;
+    const limit = query.pageSize;
+    const items = await this.dataSource.query(
+      `SELECT * FROM posts WHERE blog_id = $1 ${orderBy} OFFSET $2 LIMIT $3`,
+      [blogId, offset, limit]
+    );
+    const countResult = await this.dataSource.query(
+      `SELECT COUNT(*) FROM posts WHERE blog_id = $1`,
+      [blogId]
+    );
+    const totalCount = parseInt(countResult[0].count, 10);
+    return {
       items,
       totalCount,
       page: query.pageNumber,
       size: query.pageSize,
-    });
+    };
   }
 
   async deleteById(id: string): Promise<void> {
-    const result = await this.PostModel.deleteOne({ _id: id });
-
-    if (result.deletedCount === 0) {
-      throw new NotFoundException('Blog not found');
-    }
+    const result = await this.dataSource.query(
+      `DELETE FROM posts WHERE id = $1`,
+      [id]
+    );
+    if (result[1] === 0) throw new NotFoundException('Post not found');
   }
 
+  // --- Likes and comments logic is temporarily disabled for future SQL migration ---
+  /*
   async updateLikeStatus(
     postId: string,
     userId: string,
     userLogin: string,
     likeStatus: LikeStatus,
   ): Promise<boolean> {
-    const post = await this.findOrNotFoundFail(postId);
-
-    // Найдем существующий лайк пользователя
-    const existingLikeIndex = post.likes.findIndex(
-      (like) => like.userId === userId,
-    );
-    const hasExistingLike = existingLikeIndex !== -1;
-
-    // Определим старый статус
-    const oldStatus = hasExistingLike
-      ? post.likes[existingLikeIndex].status
-      : 'None';
-
-    // Если статус не изменился, ничего не делаем
-    if (oldStatus === likeStatus) {
-      return true;
-    }
-
-    // Обновим счетчики лайков/дизлайков
-    if (oldStatus === 'Like') {
-      post.likesInfo.likesCount -= 1;
-    } else if (oldStatus === 'Dislike') {
-      post.likesInfo.dislikesCount -= 1;
-    }
-
-    if (likeStatus === 'Like') {
-      post.likesInfo.likesCount += 1;
-    } else if (likeStatus === 'Dislike') {
-      post.likesInfo.dislikesCount += 1;
-    }
-
-    // Обновим или добавим лайк в массив
-    if (likeStatus === 'None') {
-      // Если новый статус "None", удаляем лайк из массива
-      if (hasExistingLike) {
-        post.likes.splice(existingLikeIndex, 1);
-
-        // Удалим из списка последних лайков
-        post.newestLikes = post.newestLikes.filter(
-          (like) => like.userId !== userId,
-        );
-      }
-    } else {
-      const currentDate = new Date();
-
-      // Обновляем существующий или добавляем новый лайк
-      if (hasExistingLike) {
-        post.likes[existingLikeIndex].status = likeStatus;
-        post.likes[existingLikeIndex].addedAt = currentDate;
-      } else {
-        post.likes.push({
-          userId,
-          login: userLogin,
-          status: likeStatus,
-          addedAt: currentDate,
-        });
-      }
-
-      // Обновляем список последних лайков только для статуса "Like"
-      if (likeStatus === 'Like') {
-        // Удалим старую запись пользователя из списка последних лайков, если она есть
-        post.newestLikes = post.newestLikes.filter(
-          (like) => like.userId !== userId,
-        );
-
-        // Добавим новый лайк в список
-        post.newestLikes.push({
-          addedAt: currentDate,
-          userId,
-          login: userLogin,
-        });
-
-        // Сортируем по дате и оставляем только последние 3
-        post.newestLikes.sort(
-          (a, b) => b.addedAt.getTime() - a.addedAt.getTime(),
-        );
-        post.newestLikes = post.newestLikes.slice(0, 3);
-      }
-    }
-
-    await this.save(post);
-    return true;
+    // ... existing like logic ...
   }
+  */
 }

@@ -43,6 +43,7 @@ import { CreateCommentCommand } from '../../comments/application/usecases/create
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
+import { PostsRepository } from '../infrastructure/posts.repository';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -53,6 +54,7 @@ export class PostsController {
     private readonly commentsQueryRepository: CommentsQueryRepository,
     private readonly postsService: PostsService,
     private readonly usersQueryRepository: UsersQueryRepository,
+    private readonly postsRepository: PostsRepository,
   ) {}
 
   @Get()

@@ -1,45 +1,60 @@
 import { NotFoundException } from '@nestjs/common';
 import { PostViewDto } from '../../api/view-dto/posts.view-dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostModelType } from '../../domain/post.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
-import { FilterQuery } from 'mongoose';
 
 export class PostsQueryRepository {
   constructor(
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async getById(id: string, userId?: string): Promise<PostViewDto> {
-    const user = await this.PostModel.findOne({
-      _id: id,
-    });
-
-    if (!user) {
-      throw new NotFoundException('post not found');
-    }
-
-    return PostViewDto.mapToView(user, userId);
+    const result = await this.dataSource.query(
+      `SELECT p.*, b.name as blog_name FROM posts p LEFT JOIN blogs b ON p.blog_id = b.id WHERE p.id = $1`,
+      [id]
+    );
+    if (!result[0]) throw new NotFoundException('post not found');
+    return PostViewDto.mapToView(result[0], userId);
   }
 
   async getAll(
     query: GetPostsQueryParams,
     userId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const filter: FilterQuery<Post> = {};
-    const posts = await this.PostModel.find(filter)
-      .sort({ [query.sortBy]: query.sortDirection })
-      .skip(query.calculateSkip())
-      .limit(query.pageSize);
+    const filter: string[] = [];
+    const params: (string | number)[] = [];
+    let paramIndex = 1;
 
-    const totalCount = await this.PostModel.countDocuments(filter);
+    // Здесь можно добавить фильтры по необходимости
 
-    const items = posts.map((post) => PostViewDto.mapToView(post, userId));
+    const sortByMap: Record<string, string> = {
+      createdAt: 'created_at',
+      title: 'title',
+    };
+    const sortBy = sortByMap[query.sortBy] || 'created_at';
+    const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
+    const where = filter.length ? `WHERE ${filter.join(' AND ')}` : '';
+    const offset = (query.pageNumber - 1) * query.pageSize;
+    const limit = query.pageSize;
+
+    params.push(offset);
+    params.push(limit);
+
+    const items = await this.dataSource.query(
+      `SELECT p.*, b.name as blog_name FROM posts p LEFT JOIN blogs b ON p.blog_id = b.id ${where} ${orderBy} OFFSET $${paramIndex} LIMIT $${paramIndex + 1}`,
+      params
+    );
+
+    const countResult = await this.dataSource.query(
+      `SELECT COUNT(*) FROM posts p ${where}`,
+      params.slice(0, paramIndex - 1)
+    );
+    const totalCount = parseInt(countResult[0].count, 10);
 
     return PaginatedViewDto.mapToView({
-      items,
+      items: items.map((post) => PostViewDto.mapToView(post, userId)),
       totalCount,
       page: query.pageNumber,
       size: query.pageSize,

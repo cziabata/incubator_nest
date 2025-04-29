@@ -31,6 +31,8 @@ import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.g
 import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
+import { BlogsRepository } from '../infrastructure/blogs.repository';
+import { PostsRepository } from '../../posts/infrastructure/posts.repository';
 
 @Controller('blogs')
 export class BlogsController {
@@ -39,6 +41,8 @@ export class BlogsController {
     private readonly queryBus: QueryBus,
     private readonly blogsQueryRepository: BlogsQueryRepository,
     private readonly postsQueryRepository: PostsQueryRepository,
+    private readonly blogsRepository: BlogsRepository,
+    private readonly postsRepository: PostsRepository,
   ) {}
 
   @Get()
@@ -56,7 +60,7 @@ export class BlogsController {
   }
 
   @Get(':id/posts')
-  @UseGuards(JwtOptionalAuthGuard)
+  // @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return posts by blog ID' })
   async getBlogPosts(
     @Param('id') id: string,

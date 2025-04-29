@@ -29,6 +29,8 @@ import { CommentsService } from './comments/application/comments.service';
 import { UpdatePostLikeStatusUseCase } from './posts/application/usecases/update-post-like-status.usecase';
 import { PostsService } from './posts/application/posts.service';
 import { CreateCommentUseCase } from './comments/application/usecases/create-comment.usecase';
+import { BlogsSaController } from './blogs/api/blogs.sa.controller';
+import { PostsSaController } from './posts/api/posts.sa.controller';
 
 const blogUseCases = [
   CreateBlogUseCase,
@@ -62,7 +64,7 @@ const commentUseCases = [
       { name: Comment.name, schema: CommentSchema },
     ]),
   ],
-  controllers: [BlogsController, PostsController, CommentsController],
+  controllers: [BlogsController, PostsController, CommentsController, BlogsSaController, PostsSaController],
   providers: [
     ...blogUseCases,
     ...postUseCases,

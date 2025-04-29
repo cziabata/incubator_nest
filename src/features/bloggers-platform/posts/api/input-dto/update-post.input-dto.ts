@@ -1,4 +1,4 @@
-import { IsString, MaxLength, IsNotEmpty, IsMongoId } from 'class-validator';
+import { IsString, MaxLength, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdatePostInputDto {
@@ -22,7 +22,7 @@ export class UpdatePostInputDto {
   @MaxLength(1000, { message: 'Content must be less than 1000 characters' })
   content: string;
 
-  @IsMongoId({ message: 'Invalid blog ID format' })
+  @IsString()
   @IsNotEmpty({ message: 'Blog ID is required' })
   blogId: string;
 }

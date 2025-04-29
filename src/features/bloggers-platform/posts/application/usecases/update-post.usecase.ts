@@ -15,9 +15,10 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
 
   async execute(command: UpdatePostCommand): Promise<void> {
     const post = await this.postsRepository.findOrNotFoundFail(command.id);
-
-    post.updatePost(command.dto);
-
+    post.title = command.dto.title ?? post.title;
+    post.shortDescription = command.dto.shortDescription ?? post.shortDescription;
+    post.content = command.dto.content ?? post.content;
+    post.blogId = command.dto.blogId ?? post.blogId;
     await this.postsRepository.save(post);
   }
 }
