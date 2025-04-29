@@ -64,13 +64,13 @@ export class PostViewDto {
     dto.shortDescription = post.short_description;
     dto.content = post.content;
     dto.blogId = post.blog_id?.toString();
-    dto.blogName = post.blog_name || '';
-    dto.createdAt = post.created_at;
+    dto.blogName = post.blog_name || post.blogName || '';
+    dto.createdAt = post.created_at || post.createdAt;
     dto.extendedLikesInfo = {
-      likesCount: 0,
-      dislikesCount: 0,
-      myStatus: 'None',
-      newestLikes: [],
+      likesCount: post.likes_count || 0,
+      dislikesCount: post.dislikes_count || 0,
+      myStatus: post.my_status || 'None',
+      newestLikes: post.newest_likes || [],
     };
     return dto;
   }

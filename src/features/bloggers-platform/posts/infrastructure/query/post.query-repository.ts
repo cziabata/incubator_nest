@@ -53,11 +53,12 @@ export class PostsQueryRepository {
     );
     const totalCount = parseInt(countResult[0].count, 10);
 
-    return PaginatedViewDto.mapToView({
-      items: items.map((post) => PostViewDto.mapToView(post, userId)),
-      totalCount,
+    return {
+      pagesCount: Math.ceil(totalCount / query.pageSize),
       page: query.pageNumber,
-      size: query.pageSize,
-    });
+      pageSize: query.pageSize,
+      totalCount,
+      items: items.map((post) => PostViewDto.mapToView(post, userId)),
+    };
   }
 }
