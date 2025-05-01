@@ -38,7 +38,6 @@ export class PostsSaController {
     post.title = dto.title ?? post.title;
     post.shortDescription = dto.shortDescription ?? post.shortDescription;
     post.content = dto.content ?? post.content;
-    post.blogId = dto.blogId ? dto.blogId : post.blogId;
     await this.postsRepository.save(post);
   }
 

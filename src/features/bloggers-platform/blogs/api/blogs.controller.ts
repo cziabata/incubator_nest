@@ -33,6 +33,7 @@ import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-o
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { BlogsRepository } from '../infrastructure/blogs.repository';
 import { PostsRepository } from '../../posts/infrastructure/posts.repository';
+import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
 
 @Controller('blogs')
 export class BlogsController {
@@ -55,7 +56,7 @@ export class BlogsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Return blog by ID' })
-  async getBlogByID(@Param('id') id: string): Promise<BlogViewDto> {
+  async getBlogById(@Param('id', ParseUUIDPipe) id: string): Promise<BlogViewDto> {
     return this.blogsQueryRepository.getById(id);
   }
 
@@ -103,7 +104,7 @@ export class BlogsController {
   @HttpCode(204)
   @ApiOperation({ summary: 'Update blog by ID' })
   async updateBlog(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateBlogInputDto: UpdateBlogInputDto,
   ): Promise<void> {
     await this.commandBus.execute(
@@ -115,7 +116,36 @@ export class BlogsController {
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete blog by ID' })
-  async deleteBlog(@Param('id') id: string): Promise<void> {
+  async deleteBlog(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.commandBus.execute(new DeleteBlogCommand(id));
+  }
+
+  @Post(':blogId/posts')
+  @UseGuards(BasicAuthGuard)
+  async createPostForBlog(
+    @Param('blogId', ParseUUIDPipe) blogId: string,
+    @Body() dto: CreatePostForSpecificBlogInputDto,
+  ): Promise<PostViewDto> {
+    const blog = await this.blogsQueryRepository.getById(blogId);
+    const postId = await this.postsRepository.save({
+      title: dto.title,
+      shortDescription: dto.shortDescription,
+      content: dto.content,
+      blogId: blogId,
+      blogName: blog.name,
+    });
+    return this.postsQueryRepository.getById(postId);
+  }
+
+  @Get(':blogId/posts')
+  async getPostsForBlog(
+    @Param('blogId', ParseUUIDPipe) blogId: string,
+    @Query() query: GetPostsQueryParams,
+  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    const result = await this.postsRepository.getPostsByBlogId(blogId, query);
+    return {
+      ...result,
+      items: result.items.map((post: any) => PostViewDto.mapToView(post)),
+    };
   }
 }

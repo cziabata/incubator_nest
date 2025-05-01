@@ -12,6 +12,8 @@ import { CreatePostForSpecificBlogInputDto } from './input-dto/create-blog-post.
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
+import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
+import { UpdatePostInputDto } from '../../posts/api/input-dto/update-post.input-dto';
 
 @Controller('sa/blogs')
 export class BlogsSaController {
@@ -43,7 +45,7 @@ export class BlogsSaController {
   @Put(':id')
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
-  async updateBlog(@Param('id') id: string, @Body() dto: UpdateBlogInputDto): Promise<void> {
+  async updateBlog(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateBlogInputDto): Promise<void> {
     const blog = await this.blogsRepository.findOrNotFoundFail(id);
     await this.blogsRepository.save({
       id: blog.id,
@@ -57,14 +59,14 @@ export class BlogsSaController {
   @Delete(':id')
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
-  async deleteBlog(@Param('id') id: string): Promise<void> {
+  async deleteBlog(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.blogsRepository.deleteById(id);
   }
 
   @Post(':blogId/posts')
   @UseGuards(BasicAuthGuard)
   async createPostForBlog(
-    @Param('blogId') blogId: string,
+    @Param('blogId', ParseUUIDPipe) blogId: string,
     @Body() dto: CreatePostForSpecificBlogInputDto,
   ): Promise<PostViewDto> {
     const blog = await this.blogsQueryRepository.getById(blogId);
@@ -81,7 +83,7 @@ export class BlogsSaController {
   @Get(':blogId/posts')
   @UseGuards(BasicAuthGuard)
   async getPostsForBlog(
-    @Param('blogId') blogId: string,
+    @Param('blogId', ParseUUIDPipe) blogId: string,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const result = await this.postsRepository.getPostsByBlogId(blogId, query);
@@ -95,14 +97,14 @@ export class BlogsSaController {
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
   async updatePostForBlog(
-    @Param('blogId') blogId: string,
-    @Param('postId') postId: string,
-    @Body() dto: UpdateBlogInputDto,
+    @Param('blogId', ParseUUIDPipe) blogId: string,
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Body() dto: UpdatePostInputDto,
   ): Promise<void> {
     const post = await this.postsRepository.findOrNotFoundFail(postId);
-    post.title = dto.name;
-    post.shortDescription = dto.description;
-    post.content = dto.websiteUrl;
+    post.title = dto.title;
+    post.shortDescription = dto.shortDescription;
+    post.content = dto.content;
     post.blogId = blogId;
     await this.postsRepository.save(post);
   }
@@ -111,8 +113,8 @@ export class BlogsSaController {
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
   async deletePostForBlog(
-    @Param('blogId') blogId: string,
-    @Param('postId') postId: string,
+    @Param('blogId', ParseUUIDPipe) blogId: string,
+    @Param('postId', ParseUUIDPipe) postId: string,
   ): Promise<void> {
     await this.blogsRepository.findOrNotFoundFail(blogId);
     await this.postsRepository.deleteById(postId);

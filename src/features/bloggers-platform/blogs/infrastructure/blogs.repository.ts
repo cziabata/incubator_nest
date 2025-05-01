@@ -49,6 +49,6 @@ export class BlogsRepository {
       `DELETE FROM blogs WHERE id = $1`,
       [id]
     );
-    if (result[1] === 0) throw new NotFoundException('Blog not found');
+    if (result.rowCount === 0) throw new NotFoundException('Blog not found');
   }
 }

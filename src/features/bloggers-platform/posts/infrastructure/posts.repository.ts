@@ -80,7 +80,7 @@ export class PostsRepository {
       `DELETE FROM posts WHERE id = $1`,
       [id]
     );
-    if (result[1] === 0) throw new NotFoundException('Post not found');
+    if (result.rowCount === 0) throw new NotFoundException('Post not found');
   }
 
   // --- Likes and comments logic is temporarily disabled for future SQL migration ---

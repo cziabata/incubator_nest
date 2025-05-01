@@ -22,7 +22,7 @@ export class UpdatePostInputDto {
   @MaxLength(1000, { message: 'Content must be less than 1000 characters' })
   content: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'Blog ID is required' })
-  blogId: string;
+  // @IsString()
+  // @IsNotEmpty({ message: 'Blog ID is required' })
+  // blogId: string;
 }
