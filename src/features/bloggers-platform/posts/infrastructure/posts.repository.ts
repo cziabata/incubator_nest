@@ -58,20 +58,43 @@ export class PostsRepository {
     const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
     const offset = (query.pageNumber - 1) * query.pageSize;
     const limit = query.pageSize;
+
     const items = await this.dataSource.query(
-      `SELECT * FROM posts WHERE blog_id = $1 ${orderBy} OFFSET $2 LIMIT $3`,
+      `SELECT p.*, b.name as blog_name 
+       FROM posts p 
+       LEFT JOIN blogs b ON p.blog_id = b.id 
+       WHERE p.blog_id = $1 
+       ${orderBy} 
+       OFFSET $2 LIMIT $3`,
       [blogId, offset, limit]
     );
+
     const countResult = await this.dataSource.query(
       `SELECT COUNT(*) FROM posts WHERE blog_id = $1`,
       [blogId]
     );
     const totalCount = parseInt(countResult[0].count, 10);
+
     return {
-      items,
-      totalCount,
+      pagesCount: Math.ceil(totalCount / query.pageSize),
       page: query.pageNumber,
-      size: query.pageSize,
+      pageSize: query.pageSize,
+      totalCount,
+      items: items.map((post: any) => ({
+        id: post.id,
+        title: post.title,
+        shortDescription: post.short_description,
+        content: post.content,
+        blogId: post.blog_id,
+        blogName: post.blog_name,
+        createdAt: post.created_at,
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+          myStatus: 'None',
+          newestLikes: []
+        }
+      }))
     };
   }
 
