@@ -53,7 +53,7 @@ export class CommentsController {
     return this.commentsQueryRepository.getById(id, userId);
   }
 
-  @Put(':id')
+  @Put(':commentId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -67,7 +67,7 @@ export class CommentsController {
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async updateComment(
-    @Param('id') commentId: string,
+    @Param('commentId') commentId: string,
     @Body() dto: UpdateCommentInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
@@ -90,7 +90,7 @@ export class CommentsController {
     await this.commentsService.updateComment(commentId, dto.content);
   }
 
-  @Delete(':id')
+  @Delete(':commentId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -103,7 +103,7 @@ export class CommentsController {
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async deleteComment(
-    @Param('id') commentId: string,
+    @Param('commentId') commentId: string,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     // Проверка существования комментария
@@ -125,7 +125,7 @@ export class CommentsController {
     await this.commentsService.deleteComment(commentId);
   }
 
-  @Put(':id/like-status')
+  @Put(':commentId/like-status')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -135,7 +135,7 @@ export class CommentsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async updateLikeStatus(
-    @Param('id') commentId: string,
+    @Param('commentId') commentId: string,
     @Body() dto: LikeStatusInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {

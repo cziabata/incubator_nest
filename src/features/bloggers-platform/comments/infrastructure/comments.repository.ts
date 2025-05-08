@@ -1,21 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentDocument, CommentModelType } from '../domain/comment.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { LikeStatus } from 'src/core/dto/likes';
 
 @Injectable()
 export class CommentsRepository {
   constructor(
-    @InjectModel(Comment.name) private CommentModel: CommentModelType
+    @InjectDataSource() private dataSource: DataSource
   ) {}
 
-  async findById(id: string): Promise<CommentDocument | null> {
-    return this.CommentModel.findOne({
-      _id: id,
-    });
+  async findById(id: string): Promise<any | null> {
+    const result = await this.dataSource.query(
+      `SELECT * FROM comments WHERE id = $1`,
+      [id]
+    );
+    return result[0] || null;
   }
 
-  async findOrNotFoundFail(id: string): Promise<CommentDocument> {
+  async findOrNotFoundFail(id: string): Promise<any> {
     const comment = await this.findById(id);
 
     if (!comment) {
@@ -25,15 +27,39 @@ export class CommentsRepository {
     return comment;
   }
 
-  async save(comment: CommentDocument) {
-    await comment.save();
+  async save(comment: any) {
+    if (comment.id) {
+      // Обновление существующего комментария
+      await this.dataSource.query(
+        `UPDATE comments 
+         SET content = $1, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $2`,
+        [comment.content, comment.id]
+      );
+      return comment.id;
+    } else {
+      // Создание нового комментария
+      const result = await this.dataSource.query(
+        `INSERT INTO comments 
+         (id, content, post_id, user_id, user_login, created_at, updated_at) 
+         VALUES 
+         (uuid_generate_v4(), $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+         RETURNING id`,
+        [comment.content, comment.postId, comment.commentatorInfo.userId, comment.commentatorInfo.userLogin]
+      );
+      return result[0].id;
+    }
   }
 
   async updateComment(commentId: string, content: string): Promise<boolean> {
-    const comment = await this.findOrNotFoundFail(commentId);
-    comment.content = content;
-    await this.save(comment);
-    return true;
+    const result = await this.dataSource.query(
+      `UPDATE comments 
+       SET content = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $2`,
+      [content, commentId]
+    );
+    
+    return result.rowCount > 0;
   }
 
   async createComment(
@@ -41,30 +67,41 @@ export class CommentsRepository {
     postId: string,
     userId: string,
     userLogin: string
-  ): Promise<CommentDocument> {
-    const newComment = new this.CommentModel({
-      content,
-      postId,
+  ): Promise<any> {
+    const result = await this.dataSource.query(
+      `INSERT INTO comments 
+       (id, content, post_id, user_id, user_login, created_at, updated_at) 
+       VALUES 
+       (uuid_generate_v4(), $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+       RETURNING id, content, post_id, user_id, user_login, created_at`,
+      [content, postId, userId, userLogin]
+    );
+    
+    const newComment = result[0];
+    return {
+      id: newComment.id,
+      content: newComment.content,
+      postId: newComment.post_id,
       commentatorInfo: {
-        userId,
-        userLogin,
+        userId: newComment.user_id,
+        userLogin: newComment.user_login
       },
+      createdAt: newComment.created_at,
       likesInfo: {
         likesCount: 0,
         dislikesCount: 0,
-        myStatus: 'None',
-      },
-      likes: []
-    });
-
-    await this.save(newComment);
-    return newComment;
+        myStatus: 'None'
+      }
+    };
   }
 
   async deleteById(id: string): Promise<void> {
-    const result = await this.CommentModel.deleteOne({ _id: id });
+    const result = await this.dataSource.query(
+      `DELETE FROM comments WHERE id = $1`,
+      [id]
+    );
     
-    if (result.deletedCount === 0) {
+    if (result.rowCount === 0) {
       throw new NotFoundException('Comment not found');
     }
   }
@@ -74,54 +111,41 @@ export class CommentsRepository {
     userId: string,
     likeStatus: LikeStatus
   ): Promise<boolean> {
-    const comment = await this.findOrNotFoundFail(commentId);
+    // Сначала проверяем, существует ли комментарий
+    await this.findOrNotFoundFail(commentId);
     
-    // Найдем существующий лайк пользователя
-    const existingLikeIndex = comment.likes.findIndex(like => like.userId === userId);
-    const hasExistingLike = existingLikeIndex !== -1;
+    // Проверяем, существует ли уже запись о лайке пользователя
+    const existingLike = await this.dataSource.query(
+      `SELECT * FROM comment_likes WHERE comment_id = $1 AND user_id = $2`,
+      [commentId, userId]
+    );
     
-    // Определим старый статус
-    const oldStatus = hasExistingLike ? comment.likes[existingLikeIndex].status : 'None';
-    
-    // Если статус не изменился, ничего не делаем
-    if (oldStatus === likeStatus) {
+    if (likeStatus === 'None' && existingLike.length > 0) {
+      // Удаляем оценку, если статус None
+      await this.dataSource.query(
+        `DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2`,
+        [commentId, userId]
+      );
       return true;
     }
     
-    // Обновим счетчики лайков/дизлайков
-    if (oldStatus === 'Like') {
-      comment.likesInfo.likesCount -= 1;
-    } else if (oldStatus === 'Dislike') {
-      comment.likesInfo.dislikesCount -= 1;
-    }
-    
-    if (likeStatus === 'Like') {
-      comment.likesInfo.likesCount += 1;
-    } else if (likeStatus === 'Dislike') {
-      comment.likesInfo.dislikesCount += 1;
-    }
-    
-    // Обновим или добавим лайк в массив
-    if (likeStatus === 'None') {
-      // Если новый статус "None", удаляем лайк из массива
-      if (hasExistingLike) {
-        comment.likes.splice(existingLikeIndex, 1);
-      }
+    if (existingLike.length > 0) {
+      // Обновляем существующую оценку
+      await this.dataSource.query(
+        `UPDATE comment_likes 
+         SET status = $3, created_at = CURRENT_TIMESTAMP 
+         WHERE comment_id = $1 AND user_id = $2`,
+        [commentId, userId, likeStatus]
+      );
     } else {
-      // Обновляем существующий или добавляем новый лайк
-      if (hasExistingLike) {
-        comment.likes[existingLikeIndex].status = likeStatus;
-        comment.likes[existingLikeIndex].createdAt = new Date();
-      } else {
-        comment.likes.push({
-          userId: userId,
-          status: likeStatus,
-          createdAt: new Date()
-        });
-      }
+      // Создаем новую оценку
+      await this.dataSource.query(
+        `INSERT INTO comment_likes (id, comment_id, user_id, status, created_at) 
+         VALUES (uuid_generate_v4(), $1, $2, $3, CURRENT_TIMESTAMP)`,
+        [commentId, userId, likeStatus]
+      );
     }
     
-    await this.save(comment);
     return true;
   }
 }

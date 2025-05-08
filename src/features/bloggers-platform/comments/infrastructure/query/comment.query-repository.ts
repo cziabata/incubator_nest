@@ -1,29 +1,38 @@
-import { NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CommentViewDto } from '../../api/view-dto/comments.view-dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../../domain/comment.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
 import { GetCommentsQueryParams } from '../../api/input-dto/get-comments-query-params.input-dto';
-import { FilterQuery } from 'mongoose';
-import { Post, PostModelType } from '../../../posts/domain/post.entity';
 
+@Injectable()
 export class CommentsQueryRepository {
   constructor(
-    @InjectModel(Comment.name)
-    private CommentModel: CommentModelType,
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
+    @InjectDataSource() private dataSource: DataSource
   ) {}
 
   async getById(id: string, userId?: string): Promise<CommentViewDto> {
-    const comment = await this.CommentModel.findOne({
-      _id: id,
-    });
+    const comment = await this.dataSource.query(
+      `SELECT 
+        c.*,
+        COALESCE(SUM(CASE WHEN cl.status = 'Like' THEN 1 ELSE 0 END), 0) AS likes_count,
+        COALESCE(SUM(CASE WHEN cl.status = 'Dislike' THEN 1 ELSE 0 END), 0) AS dislikes_count,
+        (
+          SELECT status FROM comment_likes 
+          WHERE comment_id = c.id AND user_id = $2
+        ) AS my_status
+      FROM comments c
+      LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+      WHERE c.id = $1
+      GROUP BY c.id`,
+      [id, userId || '00000000-0000-0000-0000-000000000000']
+    );
 
-    if (!comment) {
+    if (!comment || comment.length === 0) {
       throw new NotFoundException('comment not found');
     }
-    return CommentViewDto.mapToView(comment, userId);
+
+    return this.mapCommentToView(comment[0], userId);
   }
 
   async getAllByPostId(
@@ -31,23 +40,54 @@ export class CommentsQueryRepository {
     query: GetCommentsQueryParams,
     userId?: string,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    const post = await this.PostModel.findOne({ _id: postId });
-    if (!post) {
+    // Проверка существования поста
+    const post = await this.dataSource.query(
+      `SELECT * FROM posts WHERE id = $1`,
+      [postId]
+    );
+    
+    if (!post || post.length === 0) {
       throw new NotFoundException('Post not found');
     }
 
-    const filter: FilterQuery<Comment> = { postId };
+    // Определение сортировки
+    const sortByMap: Record<string, string> = {
+      createdAt: 'created_at',
+      content: 'content',
+    };
+    const sortBy = sortByMap[query.sortBy] || 'created_at';
+    const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
+    const offset = (query.pageNumber - 1) * query.pageSize;
+    const limit = query.pageSize;
 
-    const comments = await this.CommentModel.find(filter)
-      .sort({ [query.sortBy]: query.sortDirection })
-      .skip(query.calculateSkip())
-      .limit(query.pageSize);
-
-    const totalCount = await this.CommentModel.countDocuments(filter);
-
-    const items = comments.map((comment) =>
-      CommentViewDto.mapToView(comment, userId),
+    // Получение комментариев с информацией о лайках
+    const commentsWithLikes = await this.dataSource.query(
+      `SELECT 
+        c.*,
+        COALESCE(SUM(CASE WHEN cl.status = 'Like' THEN 1 ELSE 0 END), 0) AS likes_count,
+        COALESCE(SUM(CASE WHEN cl.status = 'Dislike' THEN 1 ELSE 0 END), 0) AS dislikes_count,
+        (
+          SELECT status FROM comment_likes 
+          WHERE comment_id = c.id AND user_id = $4
+        ) AS my_status
+      FROM comments c
+      LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+      WHERE c.post_id = $1
+      GROUP BY c.id
+      ${orderBy}
+      OFFSET $2 LIMIT $3`,
+      [postId, offset, limit, userId || '00000000-0000-0000-0000-000000000000']
     );
+
+    // Получение общего количества комментариев
+    const countResult = await this.dataSource.query(
+      `SELECT COUNT(*) FROM comments WHERE post_id = $1`,
+      [postId]
+    );
+    const totalCount = parseInt(countResult[0].count, 10);
+
+    // Преобразование комментариев в DTO
+    const items = commentsWithLikes.map(comment => this.mapCommentToView(comment, userId));
 
     return PaginatedViewDto.mapToView({
       items,
@@ -55,5 +95,22 @@ export class CommentsQueryRepository {
       page: query.pageNumber,
       size: query.pageSize,
     });
+  }
+
+  private mapCommentToView(comment: any, userId?: string): CommentViewDto {
+    return {
+      id: comment.id,
+      content: comment.content,
+      commentatorInfo: {
+        userId: comment.user_id,
+        userLogin: comment.user_login,
+      },
+      createdAt: comment.created_at,
+      likesInfo: {
+        likesCount: parseInt(comment.likes_count),
+        dislikesCount: parseInt(comment.dislikes_count),
+        myStatus: comment.my_status || 'None',
+      },
+    };
   }
 }
