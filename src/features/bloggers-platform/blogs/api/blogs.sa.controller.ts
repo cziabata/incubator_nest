@@ -87,10 +87,7 @@ export class BlogsSaController {
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const result = await this.postsRepository.getPostsByBlogId(blogId, query);
-    return {
-      ...result,
-      items: result.items.map((post: any) => PostViewDto.mapToView(post)),
-    };
+    return result;
   }
 
   @Put(':blogId/posts/:postId')

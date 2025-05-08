@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { LikeStatus } from 'src/core/dto/likes';
 
 @Injectable()
 export class PostsRepository {
@@ -51,22 +52,34 @@ export class PostsRepository {
     userId?: string,
   ): Promise<any> {
     const sortByMap: Record<string, string> = {
-      createdAt: 'created_at',
-      title: 'title',
+      createdAt: 'p.created_at',
+      title: 'p.title',
     };
-    const sortBy = sortByMap[query.sortBy] || 'created_at';
+    const sortBy = sortByMap[query.sortBy] || 'p.created_at';
     const orderBy = `ORDER BY ${sortBy} ${query.sortDirection.toUpperCase()}`;
     const offset = (query.pageNumber - 1) * query.pageSize;
     const limit = query.pageSize;
+    const userIdParam = userId || '00000000-0000-0000-0000-000000000000';
 
-    const items = await this.dataSource.query(
-      `SELECT p.*, b.name as blog_name 
+    // Получаем посты с информацией о количестве лайков/дизлайков и статусе текущего пользователя
+    const postsWithLikes = await this.dataSource.query(
+      `SELECT 
+         p.*,
+         b.name as blog_name,
+         COALESCE(SUM(CASE WHEN pl.status = 'Like' THEN 1 ELSE 0 END), 0) AS likes_count,
+         COALESCE(SUM(CASE WHEN pl.status = 'Dislike' THEN 1 ELSE 0 END), 0) AS dislikes_count,
+         (
+           SELECT status FROM post_likes 
+           WHERE post_id = p.id AND user_id = $4
+         ) AS my_status
        FROM posts p 
        LEFT JOIN blogs b ON p.blog_id = b.id 
-       WHERE p.blog_id = $1 
+       LEFT JOIN post_likes pl ON p.id = pl.post_id
+       WHERE p.blog_id = $1
+       GROUP BY p.id, b.name  
        ${orderBy} 
        OFFSET $2 LIMIT $3`,
-      [blogId, offset, limit]
+      [blogId, offset, limit, userIdParam]
     );
 
     const countResult = await this.dataSource.query(
@@ -75,12 +88,44 @@ export class PostsRepository {
     );
     const totalCount = parseInt(countResult[0].count, 10);
 
+    // Получаем три последних лайка для каждого поста
+    const postIds = postsWithLikes.map((post: any) => post.id);
+    let newestLikesByPostId: Record<string, any[]> = {};
+    
+    if (postIds.length > 0) {
+      const newestLikesQuery = await this.dataSource.query(
+        `SELECT post_id, user_id, login, added_at 
+         FROM (
+           SELECT *, 
+             ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY added_at DESC) as row_num
+           FROM post_likes 
+           WHERE post_id = ANY($1) AND status = 'Like'
+         ) AS ranked
+         WHERE row_num <= 3
+         ORDER BY added_at DESC`,
+        [postIds]
+      );
+      
+      // Группируем лайки по post_id
+      newestLikesByPostId = newestLikesQuery.reduce((acc: Record<string, any[]>, like: any) => {
+        if (!acc[like.post_id]) {
+          acc[like.post_id] = [];
+        }
+        acc[like.post_id].push({
+          userId: like.user_id,
+          login: like.login,
+          addedAt: like.added_at
+        });
+        return acc;
+      }, {});
+    }
+
     return {
       pagesCount: Math.ceil(totalCount / query.pageSize),
       page: query.pageNumber,
       pageSize: query.pageSize,
       totalCount,
-      items: items.map((post: any) => ({
+      items: postsWithLikes.map((post: any) => ({
         id: post.id,
         title: post.title,
         shortDescription: post.short_description,
@@ -89,10 +134,10 @@ export class PostsRepository {
         blogName: post.blog_name,
         createdAt: post.created_at,
         extendedLikesInfo: {
-          likesCount: 0,
-          dislikesCount: 0,
-          myStatus: 'None',
-          newestLikes: []
+          likesCount: parseInt(post.likes_count || 0),
+          dislikesCount: parseInt(post.dislikes_count || 0),
+          myStatus: post.my_status || 'None',
+          newestLikes: newestLikesByPostId[post.id] || []
         }
       }))
     };
@@ -106,15 +151,47 @@ export class PostsRepository {
     if (result.rowCount === 0) throw new NotFoundException('Post not found');
   }
 
-  // --- Likes and comments logic is temporarily disabled for future SQL migration ---
-  /*
   async updateLikeStatus(
     postId: string,
     userId: string,
     userLogin: string,
     likeStatus: LikeStatus,
   ): Promise<boolean> {
-    // ... existing like logic ...
+    // Сначала проверяем, существует ли пост
+    await this.findOrNotFoundFail(postId);
+    
+    // Проверяем, существует ли уже запись о лайке пользователя
+    const existingLike = await this.dataSource.query(
+      `SELECT * FROM post_likes WHERE post_id = $1 AND user_id = $2`,
+      [postId, userId]
+    );
+    
+    if (likeStatus === 'None' && existingLike.length > 0) {
+      // Удаляем оценку, если статус None
+      await this.dataSource.query(
+        `DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`,
+        [postId, userId]
+      );
+      return true;
+    }
+    
+    if (existingLike.length > 0) {
+      // Обновляем существующую оценку
+      await this.dataSource.query(
+        `UPDATE post_likes 
+         SET status = $3, added_at = CURRENT_TIMESTAMP 
+         WHERE post_id = $1 AND user_id = $2`,
+        [postId, userId, likeStatus]
+      );
+    } else {
+      // Создаем новую оценку
+      await this.dataSource.query(
+        `INSERT INTO post_likes (id, post_id, user_id, login, status, added_at) 
+         VALUES (uuid_generate_v4(), $1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+        [postId, userId, userLogin, likeStatus]
+      );
+    }
+    
+    return true;
   }
-  */
 }

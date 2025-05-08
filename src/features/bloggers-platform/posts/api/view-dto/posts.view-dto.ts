@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PostDocument } from '../../domain/post.entity';
 
 export class LikeDetailsViewDto {
   @ApiProperty({ description: 'ID пользователя, который поставил лайк' })
@@ -56,22 +55,4 @@ export class PostViewDto {
 
   @ApiProperty({ description: 'Расширенная информация о лайках' })
   extendedLikesInfo: ExtendedLikesInfoViewDto;
-
-  static mapToView(post: any, userId?: string): PostViewDto {
-    const dto = new PostViewDto();
-    dto.id = post.id?.toString();
-    dto.title = post.title;
-    dto.shortDescription = post.short_description;
-    dto.content = post.content;
-    dto.blogId = post.blog_id?.toString();
-    dto.blogName = post.blog_name || post.blogName || '';
-    dto.createdAt = post.created_at || post.createdAt;
-    dto.extendedLikesInfo = {
-      likesCount: post.likes_count || 0,
-      dislikesCount: post.dislikes_count || 0,
-      myStatus: post.my_status || 'None',
-      newestLikes: post.newest_likes || [],
-    };
-    return dto;
-  }
 }
