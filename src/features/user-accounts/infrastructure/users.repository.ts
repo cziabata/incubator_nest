@@ -1,5 +1,3 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { UpdateUserDto } from '../dto/create-user.dto';
@@ -9,7 +7,6 @@ import { InjectDataSource } from '@nestjs/typeorm';
 @Injectable()
 export class UsersRepository {
   constructor(
-    @InjectModel(User.name) private UserModel: UserModelType,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
@@ -39,8 +36,52 @@ export class UsersRepository {
     return result[0];
   }
 
-  async save(user: UserDocument) {
-    await user.save();
+  async save(user: any): Promise<string> {
+    if (user.id) {
+      // Обновление существующего пользователя
+      const sqlQuery = `
+        UPDATE users 
+        SET 
+          login = $1, 
+          email = $2, 
+          password_hash = $3, 
+          is_emai_confirmed = $4,
+          confirmation_code = $5,
+          expiration_date = $6,
+          first_name = $7,
+          last_name = $8,
+          updated_at = CURRENT_DATE
+        WHERE id = $9 AND deleted_at IS NULL
+        RETURNING id
+      `;
+      
+      const result = await this.dataSource.query(sqlQuery, [
+        user.login,
+        user.email,
+        user.passwordHash,
+        user.isEmailConfirmed,
+        user.confirmationCode,
+        user.expirationDate,
+        user.firstName,
+        user.lastName,
+        user.id
+      ]);
+      
+      if (!result || result.length === 0) {
+        throw NotFoundDomainException.create('user not found');
+      }
+      
+      return result[0].id;
+    } else {
+      // Создание нового пользователя
+      return this.createUser({
+        login: user.login,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        firstName: user.firstName,
+        lastName: user.lastName
+      });
+    }
   }
 
   async findOrNotFoundFail(id: string): Promise<any> {
