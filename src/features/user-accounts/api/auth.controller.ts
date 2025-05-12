@@ -34,14 +34,14 @@ export class AuthController {
   ) {}
 
   @Post('registration')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async createUser(@Body() body: CreateUserInputDto): Promise<void> {
     await this.authService.createUser(body);
   }
 
   @Post('registration-email-resending')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async resendConfirmationCode(
     @Body() body: ResendRegistrationEmailInputDto,
@@ -50,7 +50,7 @@ export class AuthController {
   }
 
   @Post('registration-confirmation')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async confirmRegistration(
     @Body() body: ConfirmRegistrationInputDto,
@@ -59,7 +59,7 @@ export class AuthController {
   }
 
   @Post('password-recovery')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async passwordRecovery(
     @Body() body: PasswordRecoveryInputDto,
@@ -68,7 +68,7 @@ export class AuthController {
   }
 
   @Post('new-password')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(204)
   async confirmPasswordRecovery(
     @Body() body: ConfirmPasswordRecoveryInputDto,
@@ -77,7 +77,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  //  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(200)
   @ApiResponse({ status: 200, description: 'Success' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
