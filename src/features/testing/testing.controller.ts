@@ -18,7 +18,7 @@ export class TestingController {
     await this.dataSource.query(`TRUNCATE TABLE refresh_tokens_black_list CASCADE`);
     await this.dataSource.query(`TRUNCATE TABLE users CASCADE`);
     await this.dataSource.query(`TRUNCATE TABLE comments CASCADE`);
-    await this.dataSource.query(`TRUNCATE TABLE comments_likes CASCADE`);
+    await this.dataSource.query(`TRUNCATE TABLE comment_likes CASCADE`);
     await this.dataSource.query(`TRUNCATE TABLE post_likes CASCADE`);
   }
 }
