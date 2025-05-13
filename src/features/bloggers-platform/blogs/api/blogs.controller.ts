@@ -61,10 +61,10 @@ export class BlogsController {
   }
 
   @Get(':id/posts')
-  // @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiOperation({ summary: 'Return posts by blog ID' })
   async getBlogPosts(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query() query: GetPostsQueryParams,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
@@ -135,14 +135,5 @@ export class BlogsController {
       blogName: blog.name,
     });
     return this.postsQueryRepository.getById(postId);
-  }
-
-  @Get(':blogId/posts')
-  async getPostsForBlog(
-    @Param('blogId', ParseUUIDPipe) blogId: string,
-    @Query() query: GetPostsQueryParams,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const result = await this.postsRepository.getPostsByBlogId(blogId, query);
-    return result;
   }
 }

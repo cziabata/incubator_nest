@@ -118,6 +118,13 @@ export class PostsRepository {
         });
         return acc;
       }, {});
+      
+      // Сортируем лайки для каждого поста по убыванию даты добавления
+      for (const postId in newestLikesByPostId) {
+        newestLikesByPostId[postId].sort((a, b) => 
+          new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+        );
+      }
     }
 
     return {

@@ -117,8 +117,7 @@ export class PostsQueryRepository {
            FROM post_likes 
            WHERE post_id = ANY($1) AND status = 'Like'
          ) AS ranked
-         WHERE row_num <= 3
-         ORDER BY added_at DESC`,
+         WHERE row_num <= 3`,
         [postIds]
       );
       
@@ -134,6 +133,13 @@ export class PostsQueryRepository {
         });
         return acc;
       }, {});
+      
+      // Сортируем лайки для каждого поста по убыванию даты добавления
+      for (const postId in newestLikesByPostId) {
+        newestLikesByPostId[postId].sort((a, b) => 
+          new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+        );
+      }
     }
 
     // Преобразуем посты в DTO
