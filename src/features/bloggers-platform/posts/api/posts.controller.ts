@@ -53,11 +53,20 @@ export class PostsController {
   @Get()
   @UseGuards(JwtOptionalAuthGuard)
   async getAllPosts(
-    @Query() query: GetPostsQueryParams,
+    @Query() query: GetPostsQueryParams, 
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const userId = user?.id;
-    return this.postsQueryRepository.getAll(query, userId);
+    try {
+      console.log(`[PostsController] getAllPosts called with query:`, JSON.stringify(query));
+      const userId = user?.id;
+      console.log(`[PostsController] User ID: ${userId || 'anonymous'}`);
+      const result = await this.postsQueryRepository.getAll(query, userId);
+      console.log(`[PostsController] getAllPosts success, returned ${result.items.length} posts`);
+      return result;
+    } catch (error) {
+      console.error(`[PostsController] Error in getAllPosts:`, error);
+      throw error;
+    }
   }
 
   @Get(':id')

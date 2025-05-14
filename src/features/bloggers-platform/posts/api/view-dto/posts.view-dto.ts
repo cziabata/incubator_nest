@@ -1,4 +1,3 @@
-
 export class LikeDetailsViewDto {
   userId: string;
 

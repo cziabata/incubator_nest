@@ -101,8 +101,7 @@ export class PostsRepository {
            FROM post_likes 
            WHERE post_id = ANY($1) AND status = 'Like'
          ) AS ranked
-         WHERE row_num <= 3
-         ORDER BY added_at DESC`,
+         WHERE row_num <= 3`,
         [postIds]
       );
       

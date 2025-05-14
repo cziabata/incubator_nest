@@ -98,9 +98,10 @@ export class PostsQueryRepository {
     );
 
     // Получаем общее количество постов
+    const countParams = where ? params.slice(0, paramIndex - 1) : [];
     const countResult = await this.dataSource.query(
       `SELECT COUNT(*) FROM posts p ${where}`,
-      params.slice(0, paramIndex - 1)
+      countParams
     );
     const totalCount = parseInt(countResult[0].count, 10);
 
