@@ -10,7 +10,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
 import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
 import { BlogViewDto } from './view-dto/blogs.view-dto';
@@ -47,7 +46,6 @@ export class BlogsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Return all blogs' })
   async getAllBlogs(
     @Query() query: GetBlogsQueryParams,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
@@ -55,14 +53,12 @@ export class BlogsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Return blog by ID' })
   async getBlogById(@Param('id', ParseUUIDPipe) id: string): Promise<BlogViewDto> {
     return this.blogsQueryRepository.getById(id);
   }
 
   @Get(':id/posts')
   @UseGuards(JwtOptionalAuthGuard)
-  @ApiOperation({ summary: 'Return posts by blog ID' })
   async getBlogPosts(
     @Param('id', ParseUUIDPipe) id: string,
     @Query() query: GetPostsQueryParams,
@@ -74,7 +70,6 @@ export class BlogsController {
 
   @Post()
   @UseGuards(BasicAuthGuard)
-  @ApiOperation({ summary: 'Create new blog' })
   async createBlog(
     @Body() createBlogInputDto: CreateBlogInputDto,
   ): Promise<BlogViewDto> {
@@ -86,7 +81,6 @@ export class BlogsController {
 
   @Post(':id/posts')
   @UseGuards(BasicAuthGuard, JwtOptionalAuthGuard)
-  @ApiOperation({ summary: 'Create a post for specific blog' })
   async createPostForSpecificBlog(
     @Param('id') id: string,
     @Body() createPostForSpecificInputDto: CreatePostForSpecificBlogInputDto,
@@ -102,7 +96,6 @@ export class BlogsController {
   @Put(':id')
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
-  @ApiOperation({ summary: 'Update blog by ID' })
   async updateBlog(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateBlogInputDto: UpdateBlogInputDto,
@@ -115,7 +108,6 @@ export class BlogsController {
   @Delete(':id')
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
-  @ApiOperation({ summary: 'Delete blog by ID' })
   async deleteBlog(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.commandBus.execute(new DeleteBlogCommand(id));
   }

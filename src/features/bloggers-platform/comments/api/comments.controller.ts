@@ -11,12 +11,6 @@ import {
   NotFoundException,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
 import { CommentsQueryRepository } from '../infrastructure/query/comment.query-repository';
 import { CommentViewDto } from './view-dto/comments.view-dto';
 import { UpdateCommentInputDto } from './input-dto/update-comment.input-dto';
@@ -28,7 +22,6 @@ import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
-@ApiTags('Comments')
 @Controller('comments')
 export class CommentsController {
   constructor(
@@ -38,13 +31,6 @@ export class CommentsController {
 
   @Get(':id')
   @UseGuards(JwtOptionalAuthGuard)
-  @ApiOperation({ summary: 'Return comment by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns comment',
-    type: CommentViewDto,
-  })
-  @ApiResponse({ status: 404, description: 'Comment not found' })
   async getCommentByID(
     @Param('id') id: string,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
@@ -55,17 +41,7 @@ export class CommentsController {
 
   @Put(':commentId')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Update comment by ID' })
-  @ApiResponse({ status: 204, description: 'Comment updated successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - user is not the comment owner',
-  })
-  @ApiResponse({ status: 404, description: 'Comment not found' })
   async updateComment(
     @Param('commentId') commentId: string,
     @Body() dto: UpdateCommentInputDto,
@@ -92,16 +68,7 @@ export class CommentsController {
 
   @Delete(':commentId')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete comment by ID' })
-  @ApiResponse({ status: 204, description: 'Comment deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - user is not the comment owner',
-  })
-  @ApiResponse({ status: 404, description: 'Comment not found' })
   async deleteComment(
     @Param('commentId') commentId: string,
     @ExtractUserFromRequest() user: UserContextDto,
@@ -127,13 +94,7 @@ export class CommentsController {
 
   @Put(':commentId/like-status')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Update like status for the comment' })
-  @ApiResponse({ status: 204, description: 'Like status updated successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Comment not found' })
   async updateLikeStatus(
     @Param('commentId') commentId: string,
     @Body() dto: LikeStatusInputDto,

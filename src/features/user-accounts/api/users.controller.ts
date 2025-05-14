@@ -16,7 +16,6 @@ import { UserViewDto } from './view-dto/users.view-dto';
 import { UsersService } from '../application/users.service';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
-import { ApiBasicAuth, ApiParam } from '@nestjs/swagger';
 import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
@@ -28,13 +27,11 @@ export class UsersController {
     private usersService: UsersService,
   ) {}
 
-  @ApiParam({ name: 'id' })
   @Get(':id')
   async getById(@Param('id') id: string): Promise<UserViewDto> {
     return this.usersQueryRepository.getByIdOrNotFoundFail(id);
   }
 
-  @ApiBasicAuth('basicAuth')
   @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(
@@ -43,7 +40,6 @@ export class UsersController {
     return this.usersQueryRepository.getAll(query);
   }
 
-  @ApiBasicAuth('basicAuth')
   @UseGuards(BasicAuthGuard)
   @Post()
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
@@ -61,9 +57,7 @@ export class UsersController {
     return this.usersQueryRepository.getByIdOrNotFoundFail(userId);
   }
 
-  @ApiBasicAuth('basicAuth')
   @UseGuards(BasicAuthGuard)
-  @ApiParam({ name: 'id' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string): Promise<void> {

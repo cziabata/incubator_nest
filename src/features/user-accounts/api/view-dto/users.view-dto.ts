@@ -1,4 +1,3 @@
-import { OmitType } from '@nestjs/swagger';
 import { UserDocument } from '../../domain/user.entity';
 
 export class UserViewDto {

@@ -13,12 +13,6 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
 import { PostsQueryRepository } from '../infrastructure/query/post.query-repository';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
@@ -45,7 +39,6 @@ import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-o
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { PostsRepository } from '../infrastructure/posts.repository';
 
-@ApiTags('Posts')
 @Controller('posts')
 export class PostsController {
   constructor(
@@ -59,7 +52,6 @@ export class PostsController {
 
   @Get()
   @UseGuards(JwtOptionalAuthGuard)
-  @ApiOperation({ summary: 'Return all posts' })
   async getAllPosts(
     @Query() query: GetPostsQueryParams,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
@@ -70,9 +62,6 @@ export class PostsController {
 
   @Get(':id')
   @UseGuards(JwtOptionalAuthGuard)
-  @ApiOperation({ summary: 'Return post by ID' })
-  @ApiResponse({ status: 200, description: 'Returns post', type: PostViewDto })
-  @ApiResponse({ status: 404, description: 'Post not found' })
   async getPostByID(
     @Param('id') id: string,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
@@ -87,7 +76,6 @@ export class PostsController {
 
   @Get(':id/comments')
   @UseGuards(JwtOptionalAuthGuard)
-  @ApiOperation({ summary: 'Return all comments for post' })
   async getAllPostComments(
     @Param('id') id: string,
     @Query() query: GetCommentsQueryParams,
@@ -104,7 +92,6 @@ export class PostsController {
 
   @Post()
   @UseGuards(BasicAuthGuard)
-  @ApiOperation({ summary: 'Create a post' })
   async createPost(
     @Body() createPostInputDto: CreatePostInputDto,
   ): Promise<PostViewDto> {
@@ -140,13 +127,7 @@ export class PostsController {
 
   @Put(':id/like-status')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Update like status for the post' })
-  @ApiResponse({ status: 204, description: 'Like status updated successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Post not found' })
   async updateLikeStatus(
     @Param('id') postId: string,
     @Body() dto: UpdatePostLikeStatusInputDto,
@@ -172,15 +153,6 @@ export class PostsController {
 
   @Post(':id/comments')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create comment for specific post' })
-  @ApiResponse({
-    status: 201,
-    description: 'Comment created successfully',
-    type: CommentViewDto,
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Post not found' })
   async createComment(
     @Param('id') postId: string,
     @Body() createCommentDto: CreateCommentInputDto,

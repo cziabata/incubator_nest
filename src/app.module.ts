@@ -20,11 +20,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     MongooseModule.forRoot(process.env.MONGO_URL || '', {
       dbName: process.env.DB_NAME || 'incubator',
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'swagger-static'),
-      serveRoot:
-        process.env.NODE_ENV === 'development' ? '/' : `/${GLOBAL_PREFIX}`,
-    }),
     ThrottlerModule.forRoot({
       throttlers: [
         {

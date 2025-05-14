@@ -17,7 +17,6 @@ import { ConfirmRegistrationInputDto } from './input-dto/confirm-registration.in
 import { PasswordRecoveryInputDto } from './input-dto/password-recovery.input-dto';
 import { ConfirmPasswordRecoveryInputDto } from './input-dto/confirm-password-recovery.input-dto';
 import { LoginInputDto } from './input-dto/login.input-dto';
-import { ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards/bearer/jwt-auth.guard';
 import { ExtractUserFromRequest } from '../guards/decorators/param/extract-user-from-request.decorator';
 import { UserContextDto } from '../guards/dto/user-context.dto';
@@ -79,13 +78,6 @@ export class AuthController {
   @Post('login')
   //  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(200)
-  @ApiResponse({ status: 200, description: 'Success' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({
-    status: 429,
-    description:
-      'Too Many Requests - More than 5 attempts from one IP-address during 10 seconds',
-  })
   async login(
     @Body() body: LoginInputDto,
     @Res({ passthrough: true }) res: Response,
