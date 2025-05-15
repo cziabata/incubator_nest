@@ -171,9 +171,9 @@ export class PostsQueryRepository {
         dislikesCount: parseInt(post.dislikes_count || 0),
         myStatus: post.my_status || 'None',
         newestLikes: newestLikes.map((like) => ({
-          userId: like.user_id,
+          userId: like.userId || like.user_id,
           login: like.login,
-          addedAt: like.added_at
+          addedAt: like.addedAt || like.added_at
         }))
       }
     };
