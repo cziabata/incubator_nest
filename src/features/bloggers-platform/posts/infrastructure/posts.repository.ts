@@ -150,11 +150,10 @@ export class PostsRepository {
   }
 
   async deleteById(id: string): Promise<void> {
-    const result = await this.dataSource.query(
+    await this.dataSource.query(
       `DELETE FROM posts WHERE id = $1`,
       [id]
     );
-    if (result.rowCount === 0) throw new NotFoundException('Post not found');
   }
 
   async updateLikeStatus(

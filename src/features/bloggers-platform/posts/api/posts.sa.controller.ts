@@ -44,6 +44,7 @@ export class PostsSaController {
   @Delete(':id')
   @HttpCode(204)
   async deletePost(@Param('id') id: string): Promise<void> {
+    await this.postsRepository.findOrNotFoundFail(id);
     await this.postsRepository.deleteById(id);
   }
 } 
