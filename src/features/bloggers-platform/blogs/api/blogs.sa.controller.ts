@@ -60,6 +60,7 @@ export class BlogsSaController {
   @UseGuards(BasicAuthGuard)
   @HttpCode(204)
   async deleteBlog(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.blogsRepository.findOrNotFoundFail(id);
     await this.blogsRepository.deleteById(id);
   }
 
@@ -86,6 +87,7 @@ export class BlogsSaController {
     @Param('blogId', ParseUUIDPipe) blogId: string,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    await this.blogsRepository.findOrNotFoundFail(blogId);
     const result = await this.postsRepository.getPostsByBlogId(blogId, query);
     return result;
   }
@@ -98,6 +100,7 @@ export class BlogsSaController {
     @Param('postId', ParseUUIDPipe) postId: string,
     @Body() dto: UpdatePostInputDto,
   ): Promise<void> {
+    await this.blogsRepository.findOrNotFoundFail(blogId);
     const post = await this.postsRepository.findOrNotFoundFail(postId);
     post.title = dto.title;
     post.shortDescription = dto.shortDescription;

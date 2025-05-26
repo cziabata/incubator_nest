@@ -45,10 +45,9 @@ export class BlogsRepository {
   }
 
   async deleteById(id: string): Promise<void> {
-    const result = await this.dataSource.query(
+    await this.dataSource.query(
       `DELETE FROM blogs WHERE id = $1`,
       [id]
     );
-    if (result.rowCount === 0) throw new NotFoundException('Blog not found');
   }
 }
