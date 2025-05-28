@@ -10,6 +10,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserAccountsTypeOrmModule } from './features/user-accounts/user-accounts-typeorm.module';
 
 @Module({
   imports: [
@@ -33,13 +34,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: process.env.POSTGE_DB_PASSWORD || '',
       database: process.env.POSTGE_DB_NAME || '',
       ssl: true,
-      autoLoadEntities: true,
-      synchronize: true,
+      // autoLoadEntities: true,
+      // synchronize: true,
     }),
     CqrsModule.forRoot(),
     TestingModule,
     CoreModule,
     BloggersPlatformModule,
+    UserAccountsTypeOrmModule,
   ],
   controllers: [AppController],
   providers: [
