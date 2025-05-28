@@ -6,9 +6,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TestingModule } from './features/testing/testing.module';
 import { CoreModule } from './core/core.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-import { GLOBAL_PREFIX } from './setup/global-prefix.setup';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -36,8 +33,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: process.env.POSTGE_DB_PASSWORD || '',
       database: process.env.POSTGE_DB_NAME || '',
       ssl: true,
-      // autoLoadEntities: false,
-      // synchronize: false,
+      autoLoadEntities: true,
+      synchronize: true,
     }),
     CqrsModule.forRoot(),
     TestingModule,
