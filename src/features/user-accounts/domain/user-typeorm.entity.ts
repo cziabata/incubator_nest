@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { SessionTypeOrmEntity } from './session-typeorm.entity';
 
 @Entity('users')
 export class UserTypeOrmEntity {
@@ -38,6 +39,10 @@ export class UserTypeOrmEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt: Date;
+
+  // Relation to Sessions
+  @OneToMany(() => SessionTypeOrmEntity, (session) => session.user)
+  sessions: SessionTypeOrmEntity[];
 
   // Domain methods
   makeDeleted(): void {
