@@ -25,7 +25,7 @@ import { AuthTypeOrmQueryRepository } from '../infrastructure/query/auth-typeorm
 import { Response, Request } from 'express';
 import { RefreshTokenTypeOrmGuard } from '../guards/bearer/refresh-token-typeorm.guard';
 
-@Controller('auth-typeorm')
+@Controller('auth')
 export class AuthTypeOrmController {
   constructor(
     private authTypeOrmService: AuthTypeOrmService,

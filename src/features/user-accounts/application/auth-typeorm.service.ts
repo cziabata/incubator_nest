@@ -4,6 +4,7 @@ import { SessionTypeOrmService } from './session-typeorm.service';
 import { CryptoService } from './crypto.service';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
+import * as crypto from 'node:crypto';
 import { addSeconds } from 'date-fns';
 import {
   CreateUserTypeOrmDto,
@@ -18,6 +19,11 @@ import {
 import { CreateUserInputDto } from '../api/input-dto/users.input-dto';
 import { EmailService } from '../../../features/notifications/email.service';
 import { BlacklistedRefreshTokenTypeOrmRepository } from '../infrastructure/blacklisted-refresh-token-typeorm.repository';
+import { UserContextDto } from '../guards/dto/user-context.dto';
+import {
+  BadRequestDomainException,
+  UnauthorizedDomainException,
+} from 'src/core/exceptions/domain-exceptions';
 
 // Constants matching original AuthService
 const REFRESH_TOKEN_SECONDS = 1800; // 30 minutes
@@ -35,26 +41,45 @@ export class AuthTypeOrmService {
     private readonly refreshTokenRepository: BlacklistedRefreshTokenTypeOrmRepository,
   ) {}
 
+  async validateUser(
+    login: string,
+    password: string,
+  ): Promise<UserContextDto | null> {
+    const user = await this.usersTypeOrmService.findByLogin(login);
+    if (!user) {
+      return null;
+    }
+    const isPasswordValid = await this.cryptoService.comparePasswords({
+      password,
+      hash: user.passwordHash,
+    });
+    if (!isPasswordValid) {
+      return null;
+    }
+    return { id: user.id.toString() };
+  }
+
   async createUser(dto: CreateUserInputDto): Promise<void> {
     // Check if login or email already exists
     const loginExists = await this.usersTypeOrmService.loginIsExist(dto.login);
     if (loginExists) {
-      throw new BadRequestException([
-        { message: `Login ${dto.login} is already taken`, field: 'login' },
-      ]);
+      throw BadRequestDomainException.create(
+        `Login ${dto.login} is already taken`,
+        'login',
+      );
     }
 
     const emailExists = await this.usersTypeOrmService.emailIsExist(dto.email);
     if (emailExists) {
-      throw new BadRequestException([
-        { message: `Email ${dto.email} is already taken`, field: 'email' },
-      ]);
+      throw BadRequestDomainException.create(
+        `Email ${dto.email} is already taken`,
+        'email',
+      );
     }
 
     // Generate confirmation code and expiration date
-    const confirmationCode = randomUUID();
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1); // 1 hour expiration
+    const confirmationCode = crypto.randomUUID();
+    const expirationDate = new Date(Date.now() + 75 * 60 * 1000); // 75 minutes
 
     // Create user with confirmation
     const userId = await this.usersTypeOrmService.createUserWithConfirmation({
@@ -72,21 +97,19 @@ export class AuthTypeOrmService {
   async resendConfirmationCode(email: string): Promise<void> {
     const user = await this.usersTypeOrmService.findByEmail(email);
     if (!user) {
-      throw new BadRequestException([
-        { message: 'Email not found', field: 'email' },
-      ]);
+      throw BadRequestDomainException.create('Email does not exist', 'email');
     }
 
     if (user.isEmailConfirmed) {
-      throw new BadRequestException([
-        { message: 'Email already confirmed', field: 'email' },
-      ]);
+      throw BadRequestDomainException.create(
+        'Email already confirmed',
+        'email',
+      );
     }
 
     // Generate new confirmation code
-    const confirmationCode = randomUUID();
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1); // 1 hour expiration
+    const confirmationCode = crypto.randomUUID();
+    const expirationDate = new Date(Date.now() + 75 * 60 * 1000); // 75 minutes
 
     await this.usersTypeOrmService.updateConfirmationCodeAndResetConfirmation(
       user.id,
@@ -101,21 +124,25 @@ export class AuthTypeOrmService {
   async confirmRegistration(code: string): Promise<void> {
     const user = await this.usersTypeOrmService.findByConfirmationCode(code);
     if (!user) {
-      throw new BadRequestException([
-        { message: 'Invalid confirmation code', field: 'code' },
-      ]);
+      throw BadRequestDomainException.create('Code does not exist', 'code');
     }
 
     if (user.isEmailConfirmed) {
-      throw new BadRequestException([
-        { message: 'Email already confirmed', field: 'code' },
-      ]);
+      throw BadRequestDomainException.create('Email already confirmed', 'code');
     }
 
-    if (user.isEmailConfirmationExpired()) {
-      throw new BadRequestException([
-        { message: 'Confirmation code expired', field: 'code' },
-      ]);
+    if (!user.expirationDate || new Date() > user.expirationDate) {
+      throw BadRequestDomainException.create(
+        'Confirmation code expired',
+        'code',
+      );
+    }
+
+    if (user.confirmationCode !== code) {
+      throw BadRequestDomainException.create(
+        'Invalid confirmation code',
+        'code',
+      );
     }
 
     await this.usersTypeOrmService.confirmEmail(user.id);
@@ -129,9 +156,8 @@ export class AuthTypeOrmService {
     }
 
     // Generate recovery code
-    const recoveryCode = randomUUID();
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1); // 1 hour expiration
+    const recoveryCode = crypto.randomUUID();
+    const expirationDate = new Date(Date.now() + 75 * 60 * 1000); // 75 minutes
 
     await this.usersTypeOrmService.updateConfirmationCode(
       user.id,
@@ -146,15 +172,25 @@ export class AuthTypeOrmService {
   async confirmPasswordRecovery(password: string, code: string): Promise<void> {
     const user = await this.usersTypeOrmService.findByConfirmationCode(code);
     if (!user) {
-      throw new BadRequestException([
-        { message: 'Invalid recovery code', field: 'code' },
-      ]);
+      throw BadRequestDomainException.create('Code does not exist', 'code');
     }
 
-    if (user.isEmailConfirmationExpired()) {
-      throw new BadRequestException([
-        { message: 'Recovery code expired', field: 'code' },
-      ]);
+    if (user.isEmailConfirmed) {
+      throw BadRequestDomainException.create('Email already confirmed', 'code');
+    }
+
+    if (!user.expirationDate || new Date() > user.expirationDate) {
+      throw BadRequestDomainException.create(
+        'Recovery code expired',
+        'code',
+      );
+    }
+
+    if (user.confirmationCode !== code) {
+      throw BadRequestDomainException.create(
+        'Invalid confirmation code',
+        'code',
+      );
     }
 
     await this.usersTypeOrmService.updatePasswordAndConfirmEmail(user.id, password);
@@ -168,7 +204,10 @@ export class AuthTypeOrmService {
   ): Promise<AuthTokensDto> {
     const user = await this.usersTypeOrmService.findByLoginOrEmail(loginOrEmail);
     if (!user) {
-      throw new UnauthorizedException('Invalid login or password or email');
+      throw UnauthorizedDomainException.create(
+        'Invalid login or password or email',
+        'loginOrEmail'
+      );
     }
 
     const isPasswordValid = await this.cryptoService.comparePasswords({
@@ -176,11 +215,10 @@ export class AuthTypeOrmService {
       hash: user.passwordHash,
     });
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid login or password or email');
-    }
-
-    if (!user.isEmailConfirmed) {
-      throw new UnauthorizedException('Email not confirmed');
+      throw UnauthorizedDomainException.create(
+        'Invalid login or password or email',
+        'loginOrEmail'
+      );
     }
 
     return this.login(user.id, deviceName, ip);
@@ -244,7 +282,7 @@ export class AuthTypeOrmService {
     oldRefreshToken: string,
   ): Promise<AuthTokensDto> {
     if (!oldRefreshToken) {
-      throw new UnauthorizedException('Refresh token is missing');
+      throw UnauthorizedDomainException.create('Refresh token is missing');
     }
 
     // Add token to blacklist
@@ -255,7 +293,7 @@ export class AuthTypeOrmService {
     const session = sessions.find((s) => s.deviceId === deviceId);
 
     if (!session) {
-      throw new UnauthorizedException('Session not found');
+      throw UnauthorizedDomainException.create('Session not found');
     }
 
     const iat = new Date(Date.now());
@@ -282,7 +320,11 @@ export class AuthTypeOrmService {
     );
 
     // Update session with new timestamps
-    await this.sessionTypeOrmService.updateSessionTokens(deviceId, iat, exp);
+    try {
+      await this.sessionTypeOrmService.updateSessionTokens(deviceId, iat, exp);
+    } catch (error) {
+      throw UnauthorizedDomainException.create('Failed to update session');
+    }
 
     return { accessToken, refreshToken };
   }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 // Entities
@@ -32,6 +32,8 @@ import { SessionTypeOrmController } from './api/sessions-typeorm.controller';
 
 // Guards and Strategies
 import { RefreshTokenTypeOrmStrategy } from './guards/bearer/refresh-token-typeorm.strategy';
+import { JwtStrategy } from './guards/bearer/jwt.strategy';
+import { LocalTypeOrmStrategy } from './guards/local/local-typeorm.strategy';
 
 // External modules
 import { EmailModule } from '../notifications/notifications.module';
@@ -45,13 +47,9 @@ import { EmailModule } from '../notifications/notifications.module';
       SessionTypeOrmEntity,
       BlacklistedRefreshTokenTypeOrmEntity
     ]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
-      }),
-      inject: [ConfigService],
+    JwtModule.register({
+      secret: 'access-token-secret',
+      signOptions: { expiresIn: '60m' },
     }),
   ],
   controllers: [
@@ -79,6 +77,11 @@ import { EmailModule } from '../notifications/notifications.module';
 
     // Guards and Strategies
     RefreshTokenTypeOrmStrategy,
+    JwtStrategy,
+    LocalTypeOrmStrategy,
+
+    // JwtService
+    JwtService,
   ],
   exports: [
     UsersTypeOrmService,
@@ -91,6 +94,7 @@ import { EmailModule } from '../notifications/notifications.module';
     SessionTypeOrmQueryRepository,
     AuthTypeOrmQueryRepository,
     BlacklistedRefreshTokenTypeOrmQueryRepository,
+    JwtStrategy,
   ],
 })
 export class UserAccountsTypeOrmModule {} 

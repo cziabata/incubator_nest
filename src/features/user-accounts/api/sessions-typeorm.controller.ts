@@ -13,7 +13,7 @@ import { SessionTypeOrmQueryRepository } from '../infrastructure/query/session-t
 import { RefreshTokenTypeOrmGuard } from '../guards/bearer/refresh-token-typeorm.guard';
 import { SessionTypeOrmService } from '../application/session-typeorm.service';
 
-@Controller('security/devices-typeorm')
+@Controller('security/devices')
 export class SessionTypeOrmController {
   constructor(
     private sessionTypeOrmQueryRepository: SessionTypeOrmQueryRepository,
