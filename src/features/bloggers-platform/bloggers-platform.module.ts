@@ -31,6 +31,7 @@ import { PostsService } from './posts/application/posts.service';
 import { CreateCommentUseCase } from './comments/application/usecases/create-comment.usecase';
 import { BlogsSaController } from './blogs/api/blogs.sa.controller';
 import { PostsSaController } from './posts/api/posts.sa.controller';
+import { BlogsTypeOrmModule } from './blogs/blogs-typeorm.module';
 
 const blogUseCases = [
   CreateBlogUseCase,
@@ -58,6 +59,7 @@ const commentUseCases = [
   imports: [
     UserAccountsModule,
     CqrsModule,
+    BlogsTypeOrmModule,
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
