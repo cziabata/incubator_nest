@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { PostTypeOrm } from '../../posts/domain/post-typeorm.entity';
 
 @Entity('blogs')
 export class BlogTypeOrm {
@@ -22,4 +23,8 @@ export class BlogTypeOrm {
 
   @Column({ name: 'is_membership', type: 'boolean', default: false, nullable: false })
   isMembership: boolean;
+
+  // Relations
+  @OneToMany(() => PostTypeOrm, post => post.blog, { cascade: true })
+  posts: PostTypeOrm[];
 } 

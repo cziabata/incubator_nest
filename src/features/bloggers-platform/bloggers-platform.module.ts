@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
-import { BlogsController } from './blogs/api/blogs.controller';
+// import { BlogsController } from './blogs/api/blogs.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsQueryRepository } from './blogs/infrastructure/query/blogs.query-repository';
 import { Post, PostSchema } from './posts/domain/post.entity';
-import { PostsController } from './posts/api/posts.controller';
+// import { PostsController } from './posts/api/posts.controller';
 import { PostsRepository } from './posts/infrastructure/posts.repository';
 import { PostsQueryRepository } from './posts/infrastructure/query/post.query-repository';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
@@ -29,9 +29,10 @@ import { CommentsService } from './comments/application/comments.service';
 import { UpdatePostLikeStatusUseCase } from './posts/application/usecases/update-post-like-status.usecase';
 import { PostsService } from './posts/application/posts.service';
 import { CreateCommentUseCase } from './comments/application/usecases/create-comment.usecase';
-import { BlogsSaController } from './blogs/api/blogs.sa.controller';
-import { PostsSaController } from './posts/api/posts.sa.controller';
+// import { BlogsSaController } from './blogs/api/blogs.sa.controller';
+// import { PostsSaController } from './posts/api/posts.sa.controller';
 import { BlogsTypeOrmModule } from './blogs/blogs-typeorm.module';
+import { PostsTypeOrmModule } from './posts/posts-typeorm.module';
 
 const blogUseCases = [
   CreateBlogUseCase,
@@ -60,13 +61,21 @@ const commentUseCases = [
     UserAccountsModule,
     CqrsModule,
     BlogsTypeOrmModule,
+    PostsTypeOrmModule,
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
     ]),
   ],
-  controllers: [BlogsController, PostsController, CommentsController, BlogsSaController, PostsSaController],
+  controllers: [
+    // Temporarily disabled to avoid route conflicts with TypeORM versions
+    // BlogsController, 
+    // PostsController, 
+    CommentsController, 
+    // BlogsSaController, 
+    // PostsSaController
+  ],
   providers: [
     ...blogUseCases,
     ...postUseCases,

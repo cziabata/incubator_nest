@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { BlogsTypeOrmService } from '../application/blogs-typeorm.service';
 import { BlogsTypeOrmQueryRepository } from '../infrastructure/query/blogs-typeorm.query-repository';
+import { PostsTypeOrmService } from '../../posts/application/posts-typeorm.service';
+import { PostsTypeOrmQueryRepository } from '../../posts/infrastructure/query/posts-typeorm.query-repository';
 import { CreateBlogDto, UpdateBlogDto } from '../dto/blogs.dto';
 import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
@@ -26,12 +28,13 @@ import { UpdatePostInputDto } from '../../posts/api/input-dto/update-post.input-
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
 
-@Controller('sa/blogs-typeorm')
+@Controller('sa/blogs')
 export class BlogsSaTypeOrmController {
   constructor(
     private blogsService: BlogsTypeOrmService,
     private blogsQueryRepository: BlogsTypeOrmQueryRepository,
-    // TODO: Add posts TypeORM repositories when they are migrated
+    private postsService: PostsTypeOrmService,
+    private postsQueryRepository: PostsTypeOrmQueryRepository,
   ) {}
 
   @Get()
@@ -67,11 +70,8 @@ export class BlogsSaTypeOrmController {
     @Param('blogId', ParseUUIDPipe) blogId: string,
     @Body() dto: CreatePostForSpecificBlogInputDto,
   ): Promise<PostViewDto> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
-    await this.blogsService.getBlogById(blogId);
-    
-    throw new Error('Posts TypeORM implementation not ready yet');
+    const post = await this.postsService.createPostForSpecificBlog(dto, blogId);
+    return await this.postsQueryRepository.getById(post.id);
   }
 
   @Get(':blogId/posts')
@@ -80,17 +80,7 @@ export class BlogsSaTypeOrmController {
     @Param('blogId', ParseUUIDPipe) blogId: string,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
-    await this.blogsService.getBlogById(blogId);
-    
-    // Return empty result for now
-    return PaginatedViewDto.mapToView({
-      items: [],
-      totalCount: 0,
-      page: query.pageNumber,
-      size: query.pageSize,
-    });
+    return await this.postsQueryRepository.getPostsByBlogId(blogId, query);
   }
 
   @Put(':blogId/posts/:postId')
@@ -101,11 +91,10 @@ export class BlogsSaTypeOrmController {
     @Param('postId', ParseUUIDPipe) postId: string,
     @Body() dto: UpdatePostInputDto,
   ): Promise<void> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
+    // Проверяем существование блога
     await this.blogsService.getBlogById(blogId);
-    
-    throw new Error('Posts TypeORM implementation not ready yet');
+    // Обновляем пост (сервис проверит существование поста)
+    await this.postsService.updatePost(postId, { ...dto, blogId });
   }
 
   @Delete(':blogId/posts/:postId')
@@ -115,10 +104,9 @@ export class BlogsSaTypeOrmController {
     @Param('blogId', ParseUUIDPipe) blogId: string,
     @Param('postId', ParseUUIDPipe) postId: string,
   ): Promise<void> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
+    // Проверяем существование блога
     await this.blogsService.getBlogById(blogId);
-    
-    throw new Error('Posts TypeORM implementation not ready yet');
+    // Удаляем пост (сервис проверит существование поста)
+    await this.postsService.deletePost(postId);
   }
 } 

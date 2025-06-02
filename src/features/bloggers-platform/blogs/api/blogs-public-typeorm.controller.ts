@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { BlogsTypeOrmService } from '../application/blogs-typeorm.service';
 import { BlogsTypeOrmQueryRepository } from '../infrastructure/query/blogs-typeorm.query-repository';
+import { PostsTypeOrmService } from '../../posts/application/posts-typeorm.service';
+import { PostsTypeOrmQueryRepository } from '../../posts/infrastructure/query/posts-typeorm.query-repository';
 import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
@@ -26,12 +28,13 @@ import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/de
 import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
 import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
 
-@Controller('blogs-typeorm')
-export class BlogsPublicTypeOrmController {
+@Controller('blogs')
+export class BlogsTypeOrmController {
   constructor(
     private readonly blogsService: BlogsTypeOrmService,
     private readonly blogsQueryRepository: BlogsTypeOrmQueryRepository,
-    // TODO: Add posts TypeORM repositories when they are migrated
+    private readonly postsService: PostsTypeOrmService,
+    private readonly postsQueryRepository: PostsTypeOrmQueryRepository,
   ) {}
 
   @Get()
@@ -53,17 +56,8 @@ export class BlogsPublicTypeOrmController {
     @Query() query: GetPostsQueryParams,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
-    await this.blogsService.getBlogById(id);
-    
-    // Return empty result for now
-    return PaginatedViewDto.mapToView({
-      items: [],
-      totalCount: 0,
-      page: query.pageNumber,
-      size: query.pageSize,
-    });
+    const userId = user?.id;
+    return await this.postsQueryRepository.getPostsByBlogId(id, query, userId);
   }
 
   @Post()
@@ -82,11 +76,8 @@ export class BlogsPublicTypeOrmController {
     @Body() createPostForSpecificInputDto: CreatePostForSpecificBlogInputDto,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PostViewDto> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
-    await this.blogsService.getBlogById(id);
-    
-    throw new Error('Posts TypeORM implementation not ready yet');
+    const post = await this.postsService.createPostForSpecificBlog(createPostForSpecificInputDto, id);
+    return await this.postsQueryRepository.getById(post.id, user?.id);
   }
 
   @Put(':id')
@@ -104,18 +95,5 @@ export class BlogsPublicTypeOrmController {
   @HttpCode(204)
   async deleteBlog(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.blogsService.deleteBlog(id);
-  }
-
-  @Post(':blogId/posts')
-  @UseGuards(BasicAuthGuard)
-  async createPostForBlog(
-    @Param('blogId', ParseUUIDPipe) blogId: string,
-    @Body() dto: CreatePostForSpecificBlogInputDto,
-  ): Promise<PostViewDto> {
-    // TODO: Implement when posts are migrated to TypeORM
-    // For now, verify blog exists
-    await this.blogsService.getBlogById(blogId);
-    
-    throw new Error('Posts TypeORM implementation not ready yet');
   }
 } 
