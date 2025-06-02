@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { BlogTypeOrm } from '../../blogs/domain/blog-typeorm.entity';
 import { PostLikeTypeOrm } from './post-like-typeorm.entity';
+import { CommentTypeOrm } from '../../comments/domain/comment-typeorm.entity';
 
 @Entity('posts')
 export class PostTypeOrm {
@@ -32,4 +33,7 @@ export class PostTypeOrm {
 
   @OneToMany(() => PostLikeTypeOrm, like => like.post, { cascade: true })
   likes: PostLikeTypeOrm[];
+
+  @OneToMany(() => CommentTypeOrm, comment => comment.post, { cascade: true })
+  comments: CommentTypeOrm[];
 } 

@@ -7,13 +7,14 @@ import { PostsTypeOrmQueryRepository } from './infrastructure/query/posts-typeor
 import { PostsTypeOrmService } from './application/posts-typeorm.service';
 import { PostsTypeOrmController } from './api/posts-public-typeorm.controller';
 import { PostsSaTypeOrmController } from './api/posts-sa-typeorm.controller';
-import { UserAccountsModule } from '../../user-accounts/user-accounts.module';
+import { UserAccountsTypeOrmModule } from '../../user-accounts/user-accounts-typeorm.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PostTypeOrm, PostLikeTypeOrm]),
     forwardRef(() => import('../blogs/blogs-typeorm.module').then(m => m.BlogsTypeOrmModule)),
-    UserAccountsModule
+    forwardRef(() => import('../comments/comments-typeorm.module').then(m => m.CommentsTypeOrmModule)),
+    UserAccountsTypeOrmModule
   ],
   controllers: [
     PostsTypeOrmController,

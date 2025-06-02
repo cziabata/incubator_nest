@@ -10,7 +10,7 @@ import { Post, PostSchema } from './posts/domain/post.entity';
 import { PostsRepository } from './posts/infrastructure/posts.repository';
 import { PostsQueryRepository } from './posts/infrastructure/query/post.query-repository';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
-import { CommentsController } from './comments/api/comments.controller';
+// import { CommentsController } from './comments/api/comments.controller';
 import { CommentsQueryRepository } from './comments/infrastructure/query/comment.query-repository';
 import { CqrsModule } from '@nestjs/cqrs';
 import { CreateBlogUseCase } from './blogs/application/usecases/create-blog.usecase';
@@ -33,6 +33,7 @@ import { CreateCommentUseCase } from './comments/application/usecases/create-com
 // import { PostsSaController } from './posts/api/posts.sa.controller';
 import { BlogsTypeOrmModule } from './blogs/blogs-typeorm.module';
 import { PostsTypeOrmModule } from './posts/posts-typeorm.module';
+import { CommentsTypeOrmModule } from './comments/comments-typeorm.module';
 
 const blogUseCases = [
   CreateBlogUseCase,
@@ -62,6 +63,7 @@ const commentUseCases = [
     CqrsModule,
     BlogsTypeOrmModule,
     PostsTypeOrmModule,
+    CommentsTypeOrmModule,
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
@@ -72,7 +74,7 @@ const commentUseCases = [
     // Temporarily disabled to avoid route conflicts with TypeORM versions
     // BlogsController, 
     // PostsController, 
-    CommentsController, 
+    // CommentsController, 
     // BlogsSaController, 
     // PostsSaController
   ],

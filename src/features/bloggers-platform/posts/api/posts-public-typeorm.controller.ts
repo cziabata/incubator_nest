@@ -15,6 +15,8 @@ import {
 } from '@nestjs/common';
 import { PostsTypeOrmService } from '../application/posts-typeorm.service';
 import { PostsTypeOrmQueryRepository } from '../infrastructure/query/posts-typeorm.query-repository';
+import { CommentsTypeOrmService } from '../../comments/application/comments-typeorm.service';
+import { CommentsTypeOrmQueryRepository } from '../../comments/infrastructure/query/comments-typeorm.query-repository';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
 import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
@@ -30,7 +32,7 @@ import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.d
 import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
-import { UsersQueryRepository } from '../../../user-accounts/infrastructure/query/users.query-repository';
+import { UsersTypeOrmQueryRepository } from '../../../user-accounts/infrastructure/query/users-typeorm.query-repository';
 import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
 
 @Controller('posts')
@@ -38,8 +40,9 @@ export class PostsTypeOrmController {
   constructor(
     private readonly postsService: PostsTypeOrmService,
     private readonly postsQueryRepository: PostsTypeOrmQueryRepository,
-    private readonly usersQueryRepository: UsersQueryRepository,
-    // TODO: Add comments TypeORM repositories when they are migrated
+    private readonly commentsService: CommentsTypeOrmService,
+    private readonly commentsQueryRepository: CommentsTypeOrmQueryRepository,
+    private readonly usersQueryRepository: UsersTypeOrmQueryRepository,
   ) {}
 
   @Get()
@@ -69,17 +72,8 @@ export class PostsTypeOrmController {
     @Query() query: GetCommentsQueryParams,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    // TODO: Implement when comments are migrated to TypeORM
-    // For now, verify post exists
-    await this.postsService.getPostById(id);
-    
-    // Return empty result for now
-    return PaginatedViewDto.mapToView({
-      items: [],
-      totalCount: 0,
-      page: query.pageNumber,
-      size: query.pageSize,
-    });
+    const userId = user?.id;
+    return await this.commentsQueryRepository.getCommentsByPostId(id, query, userId);
   }
 
   @Post()
@@ -140,10 +134,22 @@ export class PostsTypeOrmController {
     @Body() createCommentDto: CreateCommentInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<CommentViewDto> {
-    // TODO: Implement when comments are migrated to TypeORM
-    // For now, verify post exists
-    await this.postsService.getPostById(postId);
-    
-    throw new Error('Comments TypeORM implementation not ready yet');
+    const userId = user.id;
+    if (!userId) {
+      throw new ForbiddenException('User id not found');
+    }
+
+    // Получаем информацию о пользователе из базы данных
+    const userFromDb = await this.usersQueryRepository.getByIdOrNotFoundFail(userId);
+
+    // Создаем комментарий
+    const comment = await this.commentsService.createComment({
+      content: createCommentDto.content,
+      postId,
+      userId,
+      userLogin: userFromDb.login,
+    });
+
+    return await this.commentsQueryRepository.getById(comment.id, userId);
   }
 } 

@@ -34,8 +34,8 @@ import { UserAccountsTypeOrmModule } from './features/user-accounts/user-account
       password: process.env.POSTGE_DB_PASSWORD || '',
       database: process.env.POSTGE_DB_NAME || '',
       ssl: true,
-      // autoLoadEntities: true,
-      // synchronize: true,
+      autoLoadEntities: true,
+      synchronize: false, // Important: set to false in production
     }),
     CqrsModule.forRoot(),
     TestingModule,
