@@ -45,6 +45,7 @@ export class AuthTypeOrmController {
   async resendConfirmationCode(
     @Body() body: ResendRegistrationEmailInputDto,
   ): Promise<void> {
+    console.log('DEBUG: Resending confirmation code for email:', body.email);
     await this.authTypeOrmService.resendConfirmationCode(body.email);
   }
 

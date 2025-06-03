@@ -19,7 +19,7 @@ export class BlacklistedRefreshTokenTypeOrmEntity {
   @CreateDateColumn({ 
     name: 'created_at',
     type: 'timestamptz',
-    default: () => 'CURRENT_DATE'
+    default: () => 'CURRENT_TIMESTAMP'
   })
   created_at: Date;
 } 

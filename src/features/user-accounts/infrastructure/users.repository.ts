@@ -50,7 +50,7 @@ export class UsersRepository {
           expiration_date = $6,
           first_name = $7,
           last_name = $8,
-          updated_at = CURRENT_DATE
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = $9 AND deleted_at IS NULL
         RETURNING id
       `;
@@ -245,7 +245,7 @@ export class UsersRepository {
         created_at, 
         updated_at
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_DATE, CURRENT_DATE)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING id
     `;
     
@@ -273,7 +273,7 @@ export class UsersRepository {
       SET 
         confirmation_code = $1, 
         expiration_date = $2,
-        updated_at = CURRENT_DATE
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $3 AND deleted_at IS NULL
     `;
     
@@ -299,7 +299,7 @@ export class UsersRepository {
         confirmation_code = $1, 
         expiration_date = $2,
         is_emai_confirmed = false,
-        updated_at = CURRENT_DATE
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $3 AND deleted_at IS NULL
     `;
     
@@ -319,7 +319,7 @@ export class UsersRepository {
       UPDATE users 
       SET 
         is_emai_confirmed = true,
-        updated_at = CURRENT_DATE
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $1 AND deleted_at IS NULL
     `;
     
@@ -339,7 +339,7 @@ export class UsersRepository {
       SET 
         password_hash = $1,
         is_emai_confirmed = true,
-        updated_at = CURRENT_DATE
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $2 AND deleted_at IS NULL
     `;
     
@@ -371,7 +371,7 @@ export class UsersRepository {
         created_at, 
         updated_at
       ) 
-      VALUES ($1, $2, $3, $4, $5, false, CURRENT_DATE, CURRENT_DATE)
+      VALUES ($1, $2, $3, $4, $5, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING id
     `;
     
@@ -391,7 +391,7 @@ export class UsersRepository {
       UPDATE users 
       SET 
         email = $1, 
-        updated_at = CURRENT_DATE
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $2 AND deleted_at IS NULL
       RETURNING id
     `;
@@ -408,7 +408,7 @@ export class UsersRepository {
   async deleteUserById(id: string): Promise<void> {
     const sqlQuery = `
       UPDATE users 
-      SET deleted_at = CURRENT_DATE
+      SET deleted_at = CURRENT_TIMESTAMP
       WHERE id = $1 AND deleted_at IS NULL
     `;
     

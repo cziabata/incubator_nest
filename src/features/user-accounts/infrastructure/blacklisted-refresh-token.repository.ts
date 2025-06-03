@@ -19,7 +19,7 @@ export class BlacklistedRefreshTokenRepository {
   async save(token: string): Promise<void> {
     const sqlQuery = `
       INSERT INTO refresh_tokens_black_list (token, created_at)
-      VALUES ($1, CURRENT_DATE)
+      VALUES ($1, CURRENT_TIMESTAMP)
     `;
     
     await this.dataSource.query(sqlQuery, [token]);

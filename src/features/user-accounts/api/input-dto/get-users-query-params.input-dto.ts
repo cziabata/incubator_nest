@@ -2,7 +2,7 @@ import { BaseSortablePaginationParams, SortDirection } from '../../../../core/dt
 import { UsersSortBy } from './users-sort-by';
 
 export class GetUsersQueryParams extends BaseSortablePaginationParams<UsersSortBy> {
-  sortBy = UsersSortBy.Id;
+  sortBy = UsersSortBy.CreatedAt;
   sortDirection = SortDirection.Desc;
   searchLoginTerm: string | null = null;
   searchEmailTerm: string | null = null;

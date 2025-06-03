@@ -118,6 +118,7 @@ export class AuthTypeOrmService {
     );
 
     // Send confirmation email
+    console.log('DEBUG: Resending confirmation code for email:', email);
     await this.emailService.sendConfirmationEmail(email, confirmationCode);
   }
 
