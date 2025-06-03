@@ -22,28 +22,32 @@ export class SessionTypeOrmService {
   ) {}
 
   async deleteAllActiveSessions(
-    userId: string,
+    userId: string | null,
     deviceId: string,
   ): Promise<boolean> {
-    // Check if user exists
-    const user = await this.usersTypeOrmRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    // Check if user exists only if userId is provided
+    if (userId) {
+      const user = await this.usersTypeOrmRepository.findById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
     }
 
     await this.sessionTypeOrmRepository.deleteAllSessionsExceptCurrent(userId, deviceId);
     return true;
   }
 
-  async getAllActiveSessions(userId: string) {
+  async getAllActiveSessions(userId: string | null) {
     return await this.sessionTypeOrmRepository.findAllActiveDevicesForUser(userId);
   }
 
-  async getAllActiveDevicesForUser(userId: string): Promise<ActiveDeviceSessionData[]> {
-    // Check if user exists
-    const user = await this.usersTypeOrmRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+  async getAllActiveDevicesForUser(userId: string | null): Promise<ActiveDeviceSessionData[]> {
+    // Check if user exists only if userId is provided
+    if (userId) {
+      const user = await this.usersTypeOrmRepository.findById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
     }
 
     return this.sessionTypeOrmRepository.findAllActiveDevicesForUser(userId);
@@ -51,7 +55,7 @@ export class SessionTypeOrmService {
 
   async deleteActiveSessionById(
     deviceId: string,
-    userId: string,
+    userId: string | null,
   ): Promise<void> {
     // Check if session exists
     const sessionExists = await this.sessionTypeOrmRepository.findByDeviceId(deviceId);
@@ -61,22 +65,26 @@ export class SessionTypeOrmService {
       );
     }
 
-    // Check if user owns this device
-    const isUserHasSuchDevice = await this.checkIfUserHasSuchDevice(userId, deviceId);
-    if (!isUserHasSuchDevice) {
-      throw ForbiddenDomainException.create(
-        'user has no such device, forbidden',
-      );
+    // Check if user owns this device only if userId is provided
+    if (userId) {
+      const isUserHasSuchDevice = await this.checkIfUserHasSuchDevice(userId, deviceId);
+      if (!isUserHasSuchDevice) {
+        throw ForbiddenDomainException.create(
+          'user has no such device, forbidden',
+        );
+      }
     }
 
     await this.sessionTypeOrmRepository.deleteSession(deviceId);
   }
 
   async createSession(newSession: CreateSessionTypeOrmDto): Promise<number> {
-    // Check if user exists
-    const user = await this.usersTypeOrmRepository.findById(newSession.userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    // Check if user exists only if userId is not null
+    if (newSession.userId) {
+      const user = await this.usersTypeOrmRepository.findById(newSession.userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
     }
 
     // Check if session with this deviceId already exists and delete it
@@ -131,7 +139,7 @@ export class SessionTypeOrmService {
     await this.sessionTypeOrmRepository.deleteSession(deviceId);
   }
 
-  async deleteSessionByUserIdAndDeviceId(userId: string, deviceId: string): Promise<void> {
+  async deleteSessionByUserIdAndDeviceId(userId: string | null, deviceId: string): Promise<void> {
     await this.sessionTypeOrmRepository.deleteSessionByUserIdAndDeviceId(userId, deviceId);
   }
 
@@ -153,11 +161,11 @@ export class SessionTypeOrmService {
     await this.sessionTypeOrmRepository.deleteAllExpiredSessions();
   }
 
-  async deleteAllSessionsByUserId(userId: string): Promise<void> {
+  async deleteAllSessionsByUserId(userId: string | null): Promise<void> {
     await this.sessionTypeOrmRepository.deleteAllSessionsByUserId(userId);
   }
 
-  async countActiveSessionsForUser(userId: string): Promise<number> {
+  async countActiveSessionsForUser(userId: string | null): Promise<number> {
     return this.sessionTypeOrmRepository.countActiveSessions(userId);
   }
 
@@ -166,7 +174,7 @@ export class SessionTypeOrmService {
   }
 
   async checkIfUserHasSuchDevice(
-    userId: string,
+    userId: string | null,
     deviceId: string,
   ): Promise<boolean> {
     const session = await this.sessionTypeOrmRepository.findByUserIdAndDeviceId(userId, deviceId);
@@ -174,7 +182,7 @@ export class SessionTypeOrmService {
   }
 
   // Business logic methods
-  async validateUserSessionOwnership(userId: string, deviceId: string): Promise<void> {
+  async validateUserSessionOwnership(userId: string | null, deviceId: string): Promise<void> {
     const session = await this.sessionTypeOrmRepository.findByUserIdAndDeviceId(userId, deviceId);
     
     if (!session) {
@@ -187,7 +195,7 @@ export class SessionTypeOrmService {
   }
 
   async refreshSession(
-    userId: string,
+    userId: string | null,
     deviceId: string,
     newIat: Date,
     newExp: Date,

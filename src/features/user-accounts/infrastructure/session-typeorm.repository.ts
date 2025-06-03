@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan, LessThan } from 'typeorm';
+import { Repository, MoreThan, LessThan, IsNull } from 'typeorm';
 import { SessionTypeOrmEntity } from '../domain/session-typeorm.entity';
 import {
   CreateSessionTypeOrmDto,
@@ -38,13 +38,19 @@ export class SessionTypeOrmRepository {
     });
   }
 
-  async findByUserIdAndDeviceId(userId: string, deviceId: string): Promise<SessionTypeOrmEntity | null> {
+  async findByUserIdAndDeviceId(userId: string | null, deviceId: string): Promise<SessionTypeOrmEntity | null> {
     return this.sessionRepository.findOne({
-      where: { userId, deviceId },
+      where: { 
+        userId: userId === null ? IsNull() : userId, 
+        deviceId 
+      },
     });
   }
 
-  async findActiveSessionsByUserId(userId: string): Promise<SessionTypeOrmEntity[]> {
+  async findActiveSessionsByUserId(userId: string | null): Promise<SessionTypeOrmEntity[]> {
+    if (!userId) {
+      return [];
+    }
     return this.sessionRepository.find({
       where: {
         userId,
@@ -54,7 +60,7 @@ export class SessionTypeOrmRepository {
     });
   }
 
-  async findAllActiveDevicesForUser(userId: string): Promise<ActiveDeviceSessionData[]> {
+  async findAllActiveDevicesForUser(userId: string | null): Promise<ActiveDeviceSessionData[]> {
     const sessions = await this.findActiveSessionsByUserId(userId);
     
     return sessions.map(session => ({
@@ -84,15 +90,21 @@ export class SessionTypeOrmRepository {
     }
   }
 
-  async deleteSessionByUserIdAndDeviceId(userId: string, deviceId: string): Promise<void> {
-    const result = await this.sessionRepository.delete({ userId, deviceId });
+  async deleteSessionByUserIdAndDeviceId(userId: string | null, deviceId: string): Promise<void> {
+    const result = await this.sessionRepository.delete({ 
+      userId: userId === null ? IsNull() : userId, 
+      deviceId 
+    });
 
     if (result.affected === 0) {
       throw NotFoundDomainException.create('session not found');
     }
   }
 
-  async deleteAllSessionsExceptCurrent(userId: string, currentDeviceId: string): Promise<void> {
+  async deleteAllSessionsExceptCurrent(userId: string | null, currentDeviceId: string): Promise<void> {
+    if (!userId) {
+      return;
+    }
     await this.sessionRepository
       .createQueryBuilder()
       .delete()
@@ -108,7 +120,10 @@ export class SessionTypeOrmRepository {
     });
   }
 
-  async deleteAllSessionsByUserId(userId: string): Promise<void> {
+  async deleteAllSessionsByUserId(userId: string | null): Promise<void> {
+    if (!userId) {
+      return;
+    }
     await this.sessionRepository.delete({ userId });
   }
 
@@ -170,7 +185,10 @@ export class SessionTypeOrmRepository {
     return queryBuilder.getMany();
   }
 
-  async countActiveSessions(userId: string): Promise<number> {
+  async countActiveSessions(userId: string | null): Promise<number> {
+    if (!userId) {
+      return 0;
+    }
     return this.sessionRepository.count({
       where: {
         userId,

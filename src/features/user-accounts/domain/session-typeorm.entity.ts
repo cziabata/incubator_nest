@@ -6,8 +6,8 @@ export class SessionTypeOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'user_id', type: 'varchar' })
-  userId: string;
+  @Column({ name: 'user_id', type: 'varchar', nullable: true })
+  userId: string | null;
 
   @Column({ name: 'device_id', type: 'varchar' })
   deviceId: string;
@@ -31,9 +31,9 @@ export class SessionTypeOrmEntity {
   updatedAt: Date;
 
   // Relation to User entity
-  @ManyToOne(() => UserTypeOrmEntity, (user) => user.sessions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserTypeOrmEntity, (user) => user.sessions, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'user_id' })
-  user: UserTypeOrmEntity;
+  user: UserTypeOrmEntity | null;
 
   // Domain methods
   isExpired(): boolean {
@@ -54,7 +54,7 @@ export class SessionTypeOrmEntity {
 
   // Factory method
   static create(
-    userId: string,
+    userId: string | null,
     deviceId: string,
     deviceName: string,
     ip: string,

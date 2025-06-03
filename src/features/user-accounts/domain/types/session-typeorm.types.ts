@@ -2,7 +2,7 @@ import { SessionTypeOrmEntity } from '../session-typeorm.entity';
 
 // DTO для создания сессии
 export interface CreateSessionTypeOrmDto {
-  userId: string;
+  userId: string | null;
   deviceId: string;
   deviceName: string;
   ip: string;
@@ -21,7 +21,7 @@ export interface UpdateSessionTypeOrmDto {
 // Тип для возвращаемой сессии (для API)
 export interface SessionViewData {
   id: number;
-  userId: string;
+  userId: string | null;
   deviceId: string;
   deviceName: string;
   ip: string;
@@ -49,7 +49,7 @@ export interface SessionViewDto {
 
 // Фильтры для поиска сессий
 export interface SessionSearchFilters {
-  userId?: string;
+  userId?: string | null;
   deviceId?: string;
   isActive?: boolean;
   expiredBefore?: Date;
@@ -85,7 +85,7 @@ export interface AuthTokensDto {
 
 // DTO для валидации токена
 export interface ValidateTokenDto {
-  userId: string;
+  userId: string | null;
   deviceId: string;
   iat: Date;
   exp: Date;
@@ -93,7 +93,7 @@ export interface ValidateTokenDto {
 
 // DTO для создания токенов
 export interface CreateTokensDto {
-  userId: string;
+  userId: string | null;
   deviceId: string;
   deviceName: string;
   ip: string;
@@ -101,7 +101,7 @@ export interface CreateTokensDto {
 
 // DTO для обновления токенов
 export interface RefreshTokensDto {
-  userId: string;
+  userId: string | null;
   deviceId: string;
   oldRefreshToken: string;
 } 

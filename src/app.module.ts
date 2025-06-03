@@ -35,7 +35,7 @@ import { UserAccountsTypeOrmModule } from './features/user-accounts/user-account
       database: process.env.POSTGE_DB_NAME || '',
       ssl: true,
       autoLoadEntities: true,
-      synchronize: false, // Important: set to false in production
+      synchronize: true, // Important: set to false in production
     }),
     CqrsModule.forRoot(),
     TestingModule,

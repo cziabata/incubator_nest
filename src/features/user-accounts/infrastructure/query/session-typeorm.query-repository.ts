@@ -19,7 +19,10 @@ export class SessionTypeOrmQueryRepository {
     private readonly sessionRepository: Repository<SessionTypeOrmEntity>,
   ) {}
 
-  async getAllActiveDevices(userId: string): Promise<SessionViewDto[]> {
+  async getAllActiveDevices(userId: string | null): Promise<SessionViewDto[]> {
+    if (!userId) {
+      return [];
+    }
     const sessions = await this.sessionRepository.find({
       where: {
         userId,
@@ -58,8 +61,11 @@ export class SessionTypeOrmQueryRepository {
 
   async getActiveDeviceByIatAndUserId(
     iat: string,
-    userId: string,
+    userId: string | null,
   ): Promise<any | null> {
+    if (!userId) {
+      return null;
+    }
     const session = await this.sessionRepository.findOne({
       where: {
         iat: new Date(iat),
@@ -117,7 +123,10 @@ export class SessionTypeOrmQueryRepository {
     return this.mapToViewData(session);
   }
 
-  async getActiveSessionsForUser(userId: string): Promise<SessionViewData[]> {
+  async getActiveSessionsForUser(userId: string | null): Promise<SessionViewData[]> {
+    if (!userId) {
+      return [];
+    }
     const sessions = await this.sessionRepository.find({
       where: {
         userId,
@@ -162,7 +171,10 @@ export class SessionTypeOrmQueryRepository {
     };
   }
 
-  async countActiveSessionsForUser(userId: string): Promise<number> {
+  async countActiveSessionsForUser(userId: string | null): Promise<number> {
+    if (!userId) {
+      return 0;
+    }
     return this.sessionRepository.count({
       where: {
         userId,
