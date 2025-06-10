@@ -35,40 +35,40 @@ import { BlogsTypeOrmModule } from './blogs/blogs-typeorm.module';
 import { PostsTypeOrmModule } from './posts/posts-typeorm.module';
 import { CommentsTypeOrmModule } from './comments/comments-typeorm.module';
 
-const blogUseCases = [
-  CreateBlogUseCase,
-  UpdateBlogUseCase,
-  DeleteBlogUseCase,
-  GetBlogPostsUseCase
-];
+// const blogUseCases = [
+//   CreateBlogUseCase,
+//   UpdateBlogUseCase,
+//   DeleteBlogUseCase,
+//   GetBlogPostsUseCase
+// ];
 
-const postUseCases = [
-  CreatePostUseCase,
-  CreatePostForSpecificBlogUseCase,
-  UpdatePostUseCase,
-  DeletePostUseCase,
-  UpdatePostLikeStatusUseCase
-];
+// const postUseCases = [
+//   CreatePostUseCase,
+//   CreatePostForSpecificBlogUseCase,
+//   UpdatePostUseCase,
+//   DeletePostUseCase,
+//   UpdatePostLikeStatusUseCase
+// ];
 
-const commentUseCases = [
-  CreateCommentUseCase,
-  UpdateCommentUseCase,
-  DeleteCommentUseCase,
-  UpdateCommentLikeStatusUseCase
-];
+// const commentUseCases = [
+//   CreateCommentUseCase,
+//   UpdateCommentUseCase,
+//   DeleteCommentUseCase,
+//   UpdateCommentLikeStatusUseCase
+// ];
 
 @Module({
   imports: [
-    UserAccountsModule,
+    // UserAccountsModule,
     CqrsModule,
     BlogsTypeOrmModule,
     PostsTypeOrmModule,
     CommentsTypeOrmModule,
-    MongooseModule.forFeature([
-      { name: Blog.name, schema: BlogSchema },
-      { name: Post.name, schema: PostSchema },
-      { name: Comment.name, schema: CommentSchema },
-    ]),
+    // MongooseModule.forFeature([
+    //   { name: Blog.name, schema: BlogSchema },
+    //   { name: Post.name, schema: PostSchema },
+    //   { name: Comment.name, schema: CommentSchema },
+    // ]),
   ],
   controllers: [
     // Temporarily disabled to avoid route conflicts with TypeORM versions
@@ -79,26 +79,26 @@ const commentUseCases = [
     // PostsSaController
   ],
   providers: [
-    ...blogUseCases,
-    ...postUseCases,
-    ...commentUseCases,
-    BlogsRepository,
-    BlogsQueryRepository,
-    PostsRepository,
-    PostsQueryRepository,
-    CommentsQueryRepository,
-    CommentsRepository,
-    CommentsService,
-    PostsService,
+    // ...blogUseCases,
+    // ...postUseCases,
+    // ...commentUseCases,
+    // BlogsRepository,
+    // BlogsQueryRepository,
+    // PostsRepository,
+    // PostsQueryRepository,
+    // CommentsQueryRepository,
+    // CommentsRepository,
+    // CommentsService,
+    // PostsService,
   ],
   exports: [
-    BlogsRepository,
-    PostsRepository,
-    CommentsQueryRepository,
-    CommentsRepository,
-    CommentsService,
-    PostsService,
-    MongooseModule,
+    // BlogsRepository,
+    // PostsRepository,
+    // CommentsQueryRepository,
+    // CommentsRepository,
+    // CommentsService,
+    // PostsService,
+    // MongooseModule,
   ],
 })
 export class BloggersPlatformModule {}

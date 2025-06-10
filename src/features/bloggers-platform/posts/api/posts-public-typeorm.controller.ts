@@ -72,6 +72,13 @@ export class PostsTypeOrmController {
     @Query() query: GetCommentsQueryParams,
     @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
+    // Check if post exists
+    try {
+      await this.postsQueryRepository.getById(id);
+    } catch (error) {
+      throw new NotFoundException('Post not found');
+    }
+
     const userId = user?.id;
     return await this.commentsQueryRepository.getCommentsByPostId(id, query, userId);
   }
