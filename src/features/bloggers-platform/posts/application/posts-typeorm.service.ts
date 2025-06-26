@@ -3,7 +3,7 @@ import { PostsTypeOrmRepository } from '../infrastructure/posts-typeorm.reposito
 import { BlogsTypeOrmService } from '../../blogs/application/blogs-typeorm.service';
 import { CreatePostTypeOrmDto, UpdatePostTypeOrmDto, CreatePostForSpecificBlogTypeOrmDto } from '../domain/types/post-typeorm.types';
 import { PostTypeOrm } from '../domain/post-typeorm.entity';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Injectable()
 export class PostsTypeOrmService {

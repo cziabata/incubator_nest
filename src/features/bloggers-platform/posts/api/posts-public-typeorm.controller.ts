@@ -19,7 +19,7 @@ import { CommentsTypeOrmService } from '../../comments/application/comments-type
 import { CommentsTypeOrmQueryRepository } from '../../comments/infrastructure/query/comments-typeorm.query-repository';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { CreatePostInputDto } from './input-dto/create-post.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 import { UpdatePostLikeStatusInputDto } from './input-dto/update-post-like-status.input-dto';
@@ -33,7 +33,7 @@ import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guar
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 import { UsersTypeOrmQueryRepository } from '../../../user-accounts/infrastructure/query/users-typeorm.query-repository';
-import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
+import { ParseUUIDPipe } from '../../../../core/pipes/parse-uuid.pipe';
 
 @Controller('posts')
 export class PostsTypeOrmController {

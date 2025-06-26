@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { PostTypeOrm } from './post-typeorm.entity';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Entity('post_likes')
 export class PostLikeTypeOrm {

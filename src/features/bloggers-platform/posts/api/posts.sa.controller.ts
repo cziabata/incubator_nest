@@ -4,7 +4,7 @@ import { PostsQueryRepository } from '../infrastructure/query/post.query-reposit
 import { CreatePostInputDto } from './input-dto/create-post.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { PostViewDto } from './view-dto/posts.view-dto';
 
 @Controller('sa/posts')

@@ -3,7 +3,7 @@ import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 
 @Injectable()
 export class PostsQueryRepository {

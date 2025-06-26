@@ -5,9 +5,9 @@ import { CommentTypeOrm } from '../../domain/comment-typeorm.entity';
 import { CommentLikeTypeOrm } from '../../domain/comment-like-typeorm.entity';
 import { CommentViewDto } from '../../api/view-dto/comments.view-dto';
 import { GetCommentsQueryParams } from '../../api/input-dto/get-comments-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { CommentLikesInfoTypeOrm, CommentatorInfoTypeOrm } from '../../domain/types/comment-typeorm.types';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../../core/dto/likes';
 
 @Injectable()
 export class CommentsTypeOrmQueryRepository {

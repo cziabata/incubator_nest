@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CommandBus } from "@nestjs/cqrs";
-import { LikeStatus } from "src/core/dto/likes";
+import { LikeStatus } from "../../../../core/dto/likes";
 import { UpdateCommentCommand } from "./usecases/update-comment.usecase";
 import { DeleteCommentCommand } from "./usecases/delete-comment.usecase";
 import { UpdateCommentLikeStatusCommand } from "./usecases/update-comment-like-status.usecase";

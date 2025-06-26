@@ -16,10 +16,10 @@ import { PostsTypeOrmQueryRepository } from '../infrastructure/query/posts-typeo
 import { CreatePostInputDto } from './input-dto/create-post.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
-import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
+import { ParseUUIDPipe } from '../../../../core/pipes/parse-uuid.pipe';
 
 @Controller('sa/posts')
 export class PostsSaTypeOrmController {

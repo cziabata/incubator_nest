@@ -1,6 +1,6 @@
 import { ICommandHandler, CommandHandler } from "@nestjs/cqrs";
 import { CommentsRepository } from "../../infrastructure/comments.repository";
-import { LikeStatus } from "src/core/dto/likes";
+import { LikeStatus } from "../../../../../core/dto/likes";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 
 export class UpdateCommentLikeStatusCommand {

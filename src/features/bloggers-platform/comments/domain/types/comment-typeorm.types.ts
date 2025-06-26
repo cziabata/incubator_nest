@@ -1,4 +1,4 @@
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../../core/dto/likes';
 
 export interface CreateCommentTypeOrmDto {
   content: string;

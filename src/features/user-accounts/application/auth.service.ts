@@ -7,8 +7,8 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import {
   BadRequestDomainException,
   UnauthorizedDomainException,
-} from 'src/core/exceptions/domain-exceptions';
-import { EmailService } from 'src/features/notifications/email.service';
+} from '../../../core/exceptions/domain-exceptions';
+import { EmailService } from '../../notifications/email.service';
 import { SessionService } from './session.service';
 import { addSeconds } from 'date-fns';
 import { CreateSessionDto } from '../dto/create-session.dto';

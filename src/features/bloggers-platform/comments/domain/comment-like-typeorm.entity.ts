@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { CommentTypeOrm } from './comment-typeorm.entity';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Entity('comment_likes')
 export class CommentLikeTypeOrm {

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Injectable()
 export class CommentsRepository {

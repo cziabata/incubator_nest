@@ -5,7 +5,7 @@ import { CommentTypeOrm } from '../domain/comment-typeorm.entity';
 import { CommentLikeTypeOrm } from '../domain/comment-like-typeorm.entity';
 import { CreateCommentTypeOrmDto, UpdateCommentTypeOrmDto } from '../domain/types/comment-typeorm.types';
 import { CommentTypeOrmFactory } from '../domain/comment-typeorm.factory';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Injectable()
 export class CommentsTypeOrmRepository {

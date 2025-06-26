@@ -23,7 +23,7 @@ import { UserContextDto } from '../guards/dto/user-context.dto';
 import {
   BadRequestDomainException,
   UnauthorizedDomainException,
-} from 'src/core/exceptions/domain-exceptions';
+} from '../../../core/exceptions/domain-exceptions'; 
 
 // Constants matching original AuthService
 const REFRESH_TOKEN_SECONDS = 1800; // 30 minutes

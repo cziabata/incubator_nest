@@ -5,7 +5,7 @@ import { PostTypeOrm } from '../domain/post-typeorm.entity';
 import { PostLikeTypeOrm } from '../domain/post-like-typeorm.entity';
 import { CreatePostTypeOrmDto, UpdatePostTypeOrmDto, CreatePostForSpecificBlogTypeOrmDto } from '../domain/types/post-typeorm.types';
 import { PostTypeOrmFactory } from '../domain/post-typeorm.factory';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Injectable()
 export class PostsTypeOrmRepository {

@@ -18,7 +18,7 @@ import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { BlogViewDto } from './view-dto/blogs.view-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { CreatePostForSpecificBlogInputDto } from './input-dto/create-blog-post.input-dto';
@@ -26,7 +26,7 @@ import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.g
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
-import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
+import { ParseUUIDPipe } from '../../../../core/pipes/parse-uuid.pipe';
 
 @Controller('blogs')
 export class BlogsTypeOrmController {

@@ -1,7 +1,7 @@
 import { PostTypeOrm } from './post-typeorm.entity';
 import { PostLikeTypeOrm } from './post-like-typeorm.entity';
 import { CreatePostTypeOrmDto, CreatePostForSpecificBlogTypeOrmDto, UpdatePostTypeOrmDto } from './types/post-typeorm.types';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 export class PostTypeOrmFactory {
   static createPost(dto: CreatePostTypeOrmDto): PostTypeOrm {

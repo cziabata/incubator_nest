@@ -5,9 +5,9 @@ import { PostTypeOrm } from '../../domain/post-typeorm.entity';
 import { PostLikeTypeOrm } from '../../domain/post-like-typeorm.entity';
 import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { ExtendedLikesInfoTypeOrm, NewestLikeTypeOrm } from '../../domain/types/post-typeorm.types';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../../core/dto/likes';
 
 @Injectable()
 export class PostsTypeOrmQueryRepository {

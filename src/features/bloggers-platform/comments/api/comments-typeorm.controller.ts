@@ -21,7 +21,7 @@ import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.d
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-from-request.decorator';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
-import { ParseUUIDPipe } from 'src/core/pipes/parse-uuid.pipe';
+import { ParseUUIDPipe } from '../../../../core/pipes/parse-uuid.pipe';
 
 @Controller('comments')
 export class CommentsTypeOrmController {

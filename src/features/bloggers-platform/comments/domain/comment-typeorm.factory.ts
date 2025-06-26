@@ -1,7 +1,7 @@
 import { CommentTypeOrm } from './comment-typeorm.entity';
 import { CommentLikeTypeOrm } from './comment-like-typeorm.entity';
 import { CreateCommentTypeOrmDto, UpdateCommentTypeOrmDto } from './types/comment-typeorm.types';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 export class CommentTypeOrmFactory {
   static createComment(dto: CreateCommentTypeOrmDto): CommentTypeOrm {

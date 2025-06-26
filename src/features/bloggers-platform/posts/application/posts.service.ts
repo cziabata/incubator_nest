@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 import { UpdatePostLikeStatusCommand } from './usecases/update-post-like-status.usecase';
 
 @Injectable()

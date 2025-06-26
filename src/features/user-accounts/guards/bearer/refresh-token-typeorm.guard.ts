@@ -1,7 +1,7 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { NotFoundDomainException, ForbiddenDomainException } from 'src/core/exceptions/domain-exceptions';
+import { NotFoundDomainException, ForbiddenDomainException } from '../../../../core/exceptions/domain-exceptions';
 
 @Injectable()
 export class RefreshTokenTypeOrmGuard extends AuthGuard('refresh-token-typeorm') {

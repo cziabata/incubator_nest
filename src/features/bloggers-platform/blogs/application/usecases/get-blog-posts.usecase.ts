@@ -7,7 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { PostViewDto } from '../../../posts/api/view-dto/posts.view-dto';
 
 export class GetBlogPostsQuery {

@@ -3,7 +3,7 @@ import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 
 export class BlogsQueryRepository {
   constructor(

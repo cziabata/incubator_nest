@@ -3,7 +3,7 @@ import { CommentsTypeOrmRepository } from '../infrastructure/comments-typeorm.re
 import { PostsTypeOrmService } from '../../posts/application/posts-typeorm.service';
 import { CreateCommentTypeOrmDto, UpdateCommentTypeOrmDto } from '../domain/types/comment-typeorm.types';
 import { CommentTypeOrm } from '../domain/comment-typeorm.entity';
-import { LikeStatus } from 'src/core/dto/likes';
+import { LikeStatus } from '../../../../core/dto/likes';
 
 @Injectable()
 export class CommentsTypeOrmService {

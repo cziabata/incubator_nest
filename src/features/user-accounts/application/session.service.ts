@@ -8,7 +8,7 @@ import {
   BadRequestDomainException,
   ForbiddenDomainException,
   NotFoundDomainException,
-} from 'src/core/exceptions/domain-exceptions';
+} from '../../../core/exceptions/domain-exceptions';
 
 @Injectable()
 export class SessionService {
