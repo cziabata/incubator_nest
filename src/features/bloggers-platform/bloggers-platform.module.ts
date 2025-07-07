@@ -34,6 +34,7 @@ import { CreateCommentUseCase } from './comments/application/usecases/create-com
 import { BlogsTypeOrmModule } from './blogs/blogs-typeorm.module';
 import { PostsTypeOrmModule } from './posts/posts-typeorm.module';
 import { CommentsTypeOrmModule } from './comments/comments-typeorm.module';
+import { QuizTypeOrmModule } from './quiz/quiz.module';
 
 // const blogUseCases = [
 //   CreateBlogUseCase,
@@ -60,6 +61,7 @@ import { CommentsTypeOrmModule } from './comments/comments-typeorm.module';
 @Module({
   imports: [
     // UserAccountsModule,
+    QuizTypeOrmModule,
     CqrsModule,
     BlogsTypeOrmModule,
     PostsTypeOrmModule,

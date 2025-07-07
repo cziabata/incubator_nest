@@ -14,6 +14,7 @@ export class QuestionTypeOrmRepository {
   ) {}
 
   async findById(id: string): Promise<QuestionTypeOrm | null> {
+    console.log('findById', id);
     return await this.questionRepository.findOne({ where: { id: Number(id) } });
   }
 
