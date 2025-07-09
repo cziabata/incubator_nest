@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { SessionTypeOrmEntity } from './session-typeorm.entity';
+import { PlayerTypeOrmEntity } from 'src/features/bloggers-platform/quiz/domain/player-typeorm.entity';
 
 @Entity('users')
 export class UserTypeOrmEntity {
@@ -39,6 +40,9 @@ export class UserTypeOrmEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt: Date;
+
+  @OneToMany(() => PlayerTypeOrmEntity, (player) => player.user)
+  player: PlayerTypeOrmEntity[];
 
   // Relation to Sessions
   @OneToMany(() => SessionTypeOrmEntity, (session) => session.user)
