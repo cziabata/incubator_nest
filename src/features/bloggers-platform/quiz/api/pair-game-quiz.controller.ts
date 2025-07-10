@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { JwtAuthGuard } from '../../user-accounts/guards/bearer/jwt-auth.guard';
-import { ExtractUserFromRequest } from '../../user-accounts/guards/decorators/param/extract-user-from-request.decorator';
-import { UserContext } from '../../user-accounts/guards/dto/user-context.dto';
+import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
+import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-from-request.decorator';
+import { UserContextDto } from '../../../user-accounts/guards/dto/user-context.dto';
 import { GamePairViewDto } from './view-dto/game-pair.view-dto';
 import { AnswerViewDto } from './view-dto/answer.view-dto';
 import { SubmitAnswerInputDto } from './input-dto/submit-answer.input-dto';
@@ -18,35 +18,35 @@ export class PairGameQuizController {
   
   @Get('my-current')
   async getCurrentGame(
-    @ExtractUserFromRequest() user: UserContext
+    @ExtractUserFromRequest() user: UserContextDto
   ): Promise<GamePairViewDto> {
-    return await this.pairGameQuizQueryRepository.getCurrentGameByUserId(user.userId);
+    return await this.pairGameQuizQueryRepository.getCurrentGameByUserId(user.id);
   }
 
   @Get(':id')
   async getGameById(
     @Param('id') gameId: string,
-    @ExtractUserFromRequest() user: UserContext
+    @ExtractUserFromRequest() user: UserContextDto
   ): Promise<GamePairViewDto> {
-    return await this.pairGameQuizQueryRepository.getGameById(gameId, user.userId);
+    return await this.pairGameQuizQueryRepository.getGameById(gameId, user.id);
   }
 
   @Post('connection')
   @HttpCode(HttpStatus.OK)
   async connectToGame(
-    @ExtractUserFromRequest() user: UserContext
+    @ExtractUserFromRequest() user: UserContextDto
   ): Promise<GamePairViewDto> {
-    const game = await this.pairGameQuizService.connectToGame(user.userId);
-    return await this.pairGameQuizQueryRepository.getGameById(game.id.toString(), user.userId);
+    const game = await this.pairGameQuizService.connectToGame(user.id);
+    return await this.pairGameQuizQueryRepository.getGameById(game.id.toString(), user.id);
   }
 
   @Post('my-current/answers')
   @HttpCode(HttpStatus.OK)
   async submitAnswer(
     @Body() submitAnswerDto: SubmitAnswerInputDto,
-    @ExtractUserFromRequest() user: UserContext
+    @ExtractUserFromRequest() user: UserContextDto
   ): Promise<AnswerViewDto> {
-    const answer = await this.pairGameQuizService.submitAnswer(user.userId, submitAnswerDto.answer);
+    const answer = await this.pairGameQuizService.submitAnswer(user.id, submitAnswerDto.answer);
     
     return {
       questionId: answer.question_id.toString(),
