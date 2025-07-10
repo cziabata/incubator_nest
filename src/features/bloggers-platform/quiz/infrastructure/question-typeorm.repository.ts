@@ -15,7 +15,12 @@ export class QuestionTypeOrmRepository {
 
   async findById(id: string): Promise<QuestionTypeOrm | null> {
     console.log('findById', id);
-    return await this.questionRepository.findOne({ where: { id: Number(id) } });
+    // Validate that id is a valid number
+    const numericId = Number(id);
+    if (isNaN(numericId) || !Number.isInteger(numericId) || numericId <= 0) {
+      return null;
+    }
+    return await this.questionRepository.findOne({ where: { id: numericId } });
   }
 
   async findOrNotFoundFail(id: string): Promise<QuestionTypeOrm> {
@@ -39,7 +44,8 @@ export class QuestionTypeOrmRepository {
 
   async deleteById(id: string): Promise<void> {
     await this.findOrNotFoundFail(id);
-    await this.questionRepository.delete({ id: Number(id) });
+    const numericId = Number(id);
+    await this.questionRepository.delete({ id: numericId });
   }
 
   async save(question: QuestionTypeOrm): Promise<QuestionTypeOrm> {
