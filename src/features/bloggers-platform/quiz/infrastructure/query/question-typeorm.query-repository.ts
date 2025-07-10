@@ -74,7 +74,8 @@ export class QuestionTypeOrmQueryRepository {
     dto.correctAnswers = JSON.parse(question.answers);
     dto.published = question.published;
     dto.createdAt = question.createdAt;
-    dto.updatedAt = question.updatedAt;
+    // If createdAt and updatedAt are equal, it means the record was just created and not updated
+    dto.updatedAt = question.createdAt.getTime() === question.updatedAt.getTime() ? null : question.updatedAt;
     return dto;
   }
 }
