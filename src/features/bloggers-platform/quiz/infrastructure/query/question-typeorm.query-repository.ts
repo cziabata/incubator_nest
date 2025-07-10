@@ -71,7 +71,7 @@ export class QuestionTypeOrmQueryRepository {
     const dto = new QuestionViewDto();
     dto.id = question.id.toString();
     dto.body = question.body;
-    dto.answers = JSON.parse(question.answers);
+    dto.correctAnswers = JSON.parse(question.answers);
     dto.published = question.published;
     dto.createdAt = question.createdAt;
     dto.updatedAt = question.updatedAt;
