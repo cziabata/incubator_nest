@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { GameQuestionTypeOrmEntity } from './game-question-typeorm.entity';
+import { AnswerTypeOrmEntity } from './answer-typeorm.entity';
 
 @Entity('quiz_questions')
 export class QuestionTypeOrm {
@@ -19,5 +21,11 @@ export class QuestionTypeOrm {
 
   @Column({ name: 'published', type: 'boolean', default: false, nullable: false })
   published: boolean;
+
+  @OneToMany(() => GameQuestionTypeOrmEntity, (gameQuestion) => gameQuestion.question)
+  gameQuestions: GameQuestionTypeOrmEntity[]
+
+  @OneToMany(() => AnswerTypeOrmEntity, (answer) => answer.question)
+  answerEntities: AnswerTypeOrmEntity[]
 
 } 
