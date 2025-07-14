@@ -24,7 +24,7 @@ export class SubmitAnswerUseCase {
 
     // Check if player has already answered all questions
     const answeredQuestionsCount = await this.pairGameQuizRepository.getAnsweredQuestionsCount(player.id);
-    if (answeredQuestionsCount >= 5) {
+    if (answeredQuestionsCount >= 6) {
       throw new ForbiddenException('User has already answered to all questions');
     }
 
@@ -56,8 +56,8 @@ export class SubmitAnswerUseCase {
     // Get both players with their answers
     const players = await this.pairGameQuizRepository.getGamePlayersWithAnswers(gameId);
     
-    // Check if both players have answered all questions (5 each)
-    const bothFinished = players.every(player => player.answers.length >= 5);
+    // Check if both players have answered all questions (6 each)
+    const bothFinished = players.every(player => player.answers.length >= 6);
     
     if (bothFinished) {
       // Calculate who finished first and award bonus point
