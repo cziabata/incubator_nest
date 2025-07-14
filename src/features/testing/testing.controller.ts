@@ -20,5 +20,12 @@ export class TestingController {
     await this.dataSource.query(`TRUNCATE TABLE comments CASCADE`);
     await this.dataSource.query(`TRUNCATE TABLE comment_likes CASCADE`);
     await this.dataSource.query(`TRUNCATE TABLE post_likes CASCADE`);
+    
+    // Quiz tables
+    await this.dataSource.query(`TRUNCATE TABLE answers CASCADE`);
+    await this.dataSource.query(`TRUNCATE TABLE game_questions CASCADE`);
+    await this.dataSource.query(`TRUNCATE TABLE players CASCADE`);
+    await this.dataSource.query(`TRUNCATE TABLE games CASCADE`);
+    await this.dataSource.query(`TRUNCATE TABLE quiz_questions CASCADE`);
   }
 }
