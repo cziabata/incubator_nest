@@ -71,6 +71,11 @@ export class PairGameQuizQueryRepository {
   }
 
   private async mapGameToViewDto(game: GameTypeOrmEntity, currentUserId: string): Promise<GamePairViewDto> {
+    // Check if required data is present
+    if (!game.player_1) {
+      throw new NotFoundException('Game data is incomplete - player_1 missing');
+    }
+
     // Get player answers
     const firstPlayerAnswers = await this.getPlayerAnswers(game.player_1.id);
     const secondPlayerAnswers = game.player_2 ? await this.getPlayerAnswers(game.player_2.id) : [];
@@ -120,6 +125,10 @@ export class PairGameQuizQueryRepository {
   }
 
   private mapPlayerToViewDto(player: PlayerTypeOrmEntity): PlayerViewDto {
+    if (!player.user) {
+      throw new NotFoundException('Player data is incomplete - user missing');
+    }
+
     return {
       id: player.user.id,
       login: player.user.login
@@ -127,6 +136,10 @@ export class PairGameQuizQueryRepository {
   }
 
   private mapAnswerToViewDto(answer: AnswerTypeOrmEntity): AnswerViewDto {
+    if (!answer.question) {
+      throw new NotFoundException('Answer data is incomplete - question missing');
+    }
+
     return {
       questionId: answer.question.id.toString(),
       answerStatus: answer.answerStatus,
