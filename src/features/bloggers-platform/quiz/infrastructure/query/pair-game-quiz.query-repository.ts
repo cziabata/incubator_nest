@@ -42,7 +42,7 @@ export class PairGameQuizQueryRepository {
     return await this.mapGameToViewDto(game, userId);
   }
 
-  async getGameById(gameId: string, userId: string): Promise<GamePairViewDto> {
+  async getGameById(gameId: number, userId: string): Promise<GamePairViewDto> {
     const game = await this.gameRepo
       .createQueryBuilder('game')
       .leftJoinAndSelect('game.player_1', 'player1')

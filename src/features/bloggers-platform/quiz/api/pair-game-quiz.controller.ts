@@ -7,6 +7,7 @@ import { AnswerViewDto } from './view-dto/answer.view-dto';
 import { SubmitAnswerInputDto } from './input-dto/submit-answer.input-dto';
 import { PairGameQuizService } from '../application/pair-game-quiz.service';
 import { PairGameQuizQueryRepository } from '../infrastructure/query/pair-game-quiz.query-repository';
+import { ParseIntPipe } from '../../../../core/pipes/parse-int.pipe';
 
 @Controller('pair-game-quiz/pairs')
 @UseGuards(JwtAuthGuard)
@@ -25,7 +26,7 @@ export class PairGameQuizController {
 
   @Get(':id')
   async getGameById(
-    @Param('id') gameId: string,
+    @Param('id', ParseIntPipe) gameId: number,
     @ExtractUserFromRequest() user: UserContextDto
   ): Promise<GamePairViewDto> {
     return await this.pairGameQuizQueryRepository.getGameById(gameId, user.id);
@@ -37,7 +38,7 @@ export class PairGameQuizController {
     @ExtractUserFromRequest() user: UserContextDto
   ): Promise<GamePairViewDto> {
     const game = await this.pairGameQuizService.connectToGame(user.id);
-    return await this.pairGameQuizQueryRepository.getGameById(game.id.toString(), user.id);
+    return await this.pairGameQuizQueryRepository.getGameById(game.id, user.id);
   }
 
   @Post('my-current/answers')
