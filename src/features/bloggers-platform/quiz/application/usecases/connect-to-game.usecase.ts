@@ -45,14 +45,14 @@ export class ConnectToGameUseCase {
   }
 
   private async createNewPendingGame(userId: string): Promise<GameTypeOrmEntity> {
-    // Create game with temporary player1Id (will be updated later)
-    const game = await this.pairGameQuizRepository.createGame(0);
+    // Create first player without game reference first
+    const player1 = await this.pairGameQuizRepository.createPlayer(userId);
     
-    // Create first player with game reference
-    const player1 = await this.pairGameQuizRepository.createPlayer(userId, game.id);
+    // Create game with correct player1Id
+    const game = await this.pairGameQuizRepository.createGame(player1.id);
     
-    // Update game with correct player1Id
-    await this.pairGameQuizRepository.updateGameWithFirstPlayer(game.id, player1.id);
+    // Link player with the created game
+    await this.pairGameQuizRepository.updatePlayerGame(player1.id, game.id);
     
     // Return created game
     return await this.pairGameQuizRepository.findActiveGameByUserId(userId) as GameTypeOrmEntity;

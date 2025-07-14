@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, JoinColumn } from "typeorm";
 import { UserTypeOrmEntity } from "../../../user-accounts/domain/user-typeorm.entity";
 import { AnswerTypeOrmEntity } from "./answer-typeorm.entity";
 import { GameTypeOrmEntity } from "./game-typeorm.entity";
@@ -12,6 +12,7 @@ export class PlayerTypeOrmEntity {
     userId: string
 
     @ManyToOne(() => UserTypeOrmEntity, (user) => user.player)
+    @JoinColumn({name: 'user_id'})
     user: UserTypeOrmEntity
 
     @OneToMany(() => AnswerTypeOrmEntity, (answer) => answer.player)
@@ -20,7 +21,11 @@ export class PlayerTypeOrmEntity {
     @Column({name: 'score', type: 'int', default: 0})
     score: number
 
+    @Column({name: 'game_id', type: 'int', nullable: true})
+    gameId: number | null
+
     @ManyToOne(() => GameTypeOrmEntity, (game) => game.players)
-    game: GameTypeOrmEntity
+    @JoinColumn({name: 'game_id'})
+    game: GameTypeOrmEntity | null
 
 }

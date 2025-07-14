@@ -60,15 +60,15 @@ export class PairGameQuizRepository {
     const player = this.playerRepo.create({
       userId,
       score: 0,
-      ...(gameId && { game: { id: gameId } as any })
+      gameId: gameId || null
     });
 
     return await this.playerRepo.save(player);
   }
 
-  async updateGameWithFirstPlayer(gameId: number, player1Id: number): Promise<void> {
-    await this.gameRepo.update(gameId, {
-      player1Id
+  async updatePlayerGame(playerId: number, gameId: number): Promise<void> {
+    await this.playerRepo.update(playerId, {
+      gameId
     });
   }
 
