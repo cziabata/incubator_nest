@@ -35,8 +35,8 @@ export class ConnectToGameUseCase {
     // Update game with second player and set status to Active
     await this.pairGameQuizRepository.updateGameWithSecondPlayer(game.id, player2.id);
     
-    // Select random 6 questions for the game
-    const questions = await this.pairGameQuizRepository.getRandomPublishedQuestions(6);
+    // Select random 5 questions for the game
+    const questions = await this.pairGameQuizRepository.getRandomPublishedQuestions(5);
     const questionIds = questions.map(q => q.id);
     await this.pairGameQuizRepository.assignQuestionsToGame(game.id, questionIds);
     

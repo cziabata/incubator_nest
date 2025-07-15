@@ -98,10 +98,12 @@ export class PairGameQuizQueryRepository {
     const questions: QuestionViewDto[] | null = 
       game.status === GameStatus.PendingSecondPlayer 
         ? null 
-        : game.questions?.map(gq => ({
-            id: gq.question.id.toString(),
-            body: gq.question.body
-          })) || null;
+        : game.questions
+            ?.sort((a, b) => a.indexPosition - b.indexPosition)
+            .map(gq => ({
+              id: gq.question.id.toString(),
+              body: gq.question.body
+            })) || null;
 
     return {
       id: game.id.toString(),
