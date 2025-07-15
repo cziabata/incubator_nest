@@ -122,19 +122,25 @@ export class PairGameQuizRepository {
     // Get answered question IDs
     const answeredQuestionIds = await this.answerRepo
       .createQueryBuilder('answer')
-      .select('answer.question_id')
+      // use explicit alias to ensure predictable raw key name
+      .select('answer.question_id', 'questionId')
       .where('answer.player_id = :playerId', { playerId })
       .getRawMany();
 
-    const answeredIds = answeredQuestionIds.map(a => a.question_id);
+    const answeredIds = answeredQuestionIds.map((a: { questionId: number }) => a.questionId);
 
-    // Get next unanswered question
-    const gameQuestion = await this.gameQuestionRepo
+    // Build base query for next unanswered question
+    const qb = this.gameQuestionRepo
       .createQueryBuilder('gq')
       .leftJoinAndSelect('gq.question', 'question')
-      .where('gq.gameId = :gameId', { gameId })
-      .andWhere(answeredIds.length > 0 ? 'gq.questionId NOT IN (:...answeredIds)' : '1=1', 
-        { answeredIds })
+      .where('gq.gameId = :gameId', { gameId });
+
+    // Exclude already answered questions if any
+    if (answeredIds.length > 0) {
+      qb.andWhere('gq.questionId NOT IN (:...answeredIds)', { answeredIds });
+    }
+
+    const gameQuestion = await qb
       .orderBy('gq.indexPosition', 'ASC')
       .getOne();
 
