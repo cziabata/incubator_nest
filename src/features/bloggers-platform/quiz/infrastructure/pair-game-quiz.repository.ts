@@ -191,6 +191,13 @@ export class PairGameQuizRepository {
       .getMany();
   }
 
+  async getGameQuestionsCount(gameId: number): Promise<number> {
+    return await this.gameQuestionRepo
+      .createQueryBuilder('gq')
+      .where('gq.gameId = :gameId', { gameId })
+      .getCount();
+  }
+
   async addBonusPoint(playerId: number): Promise<void> {
     await this.incrementPlayerScore(playerId);
   }
