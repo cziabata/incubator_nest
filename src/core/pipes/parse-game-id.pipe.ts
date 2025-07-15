@@ -1,4 +1,4 @@
-import { PipeTransform, Injectable, ArgumentMetadata, NotFoundException } from '@nestjs/common';
+import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class ParseGameIdPipe implements PipeTransform<string, number> {
@@ -6,7 +6,7 @@ export class ParseGameIdPipe implements PipeTransform<string, number> {
     const parsedValue = parseInt(value, 10);
     
     if (isNaN(parsedValue) || !Number.isInteger(parsedValue) || parsedValue <= 0) {
-      throw new NotFoundException('Game not found');
+      throw new BadRequestException('Invalid game ID format');
     }
     
     return parsedValue;
