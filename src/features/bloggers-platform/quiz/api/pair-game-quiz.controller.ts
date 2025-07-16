@@ -8,7 +8,6 @@ import { SubmitAnswerInputDto } from './input-dto/submit-answer.input-dto';
 import { PairGameQuizService } from '../application/pair-game-quiz.service';
 import { PairGameQuizQueryRepository } from '../infrastructure/query/pair-game-quiz.query-repository';
 import { ParseGameIdPipe } from '../../../../core/pipes/parse-game-id.pipe';
-import { isUUID } from 'class-validator';
 
 @Controller('pair-game-quiz/pairs')
 @UseGuards(JwtAuthGuard)
@@ -27,13 +26,11 @@ export class PairGameQuizController {
 
   @Get(':id')
   async getGameById(
-    @Param('id', ParseGameIdPipe) gameId: number,
+    @Param('id', ParseGameIdPipe) gameId: number | string,
     @ExtractUserFromRequest() user: UserContextDto
   ): Promise<GamePairViewDto> {
-    if (isUUID(gameId.toString()) || gameId.toString() === '602afe92-7d97-4395-b1b9-6cf98b351bbe') {
-      throw new NotFoundException('Game not found');
-    }
-    return await this.pairGameQuizQueryRepository.getGameById(gameId, user.id);
+    console.log('gameId =', gameId);
+    return await this.pairGameQuizQueryRepository.getGameById(+gameId, user.id);
   }
 
   @Post('connection')
